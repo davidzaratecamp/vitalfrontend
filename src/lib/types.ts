@@ -203,3 +203,12 @@ export interface ClienteDuplicado {
   agente_nombre: string
   coincide_por: ('SSN' | 'correo')[]
 }
+
+export interface ClienteContacto {
+  id: number
+  nombres: string
+  apellidos: string
+  estado: EstadoCliente
+  agente_id: number
+  agente_nombre: string
+}

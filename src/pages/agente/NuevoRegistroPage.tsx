@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { StepStatus } from '@/components/agente/FormField'
+import { ValidacionContacto } from '@/components/agente/ValidacionContacto'
 import { TitularStep } from '@/components/agente/steps/TitularStep'
 import { ConyugeStep } from '@/components/agente/steps/ConyugeStep'
 import { DependientesStep } from '@/components/agente/steps/DependientesStep'
@@ -23,6 +24,10 @@ export default function NuevoRegistroPage() {
   const navigate = useNavigate()
   const { data: cliente, isLoading } = useCliente(id)
   const [open, setOpen] = useState('titular')
+  // La compuerta solo aplica al crear (sin :id en la URL) — corregir un
+  // registro existente (con :id) nunca pasa por acá.
+  const [gatePassed, setGatePassed] = useState(() => !!id)
+  const [datosIniciales, setDatosIniciales] = useState<{ phone_1: string; codigo_postal: string } | undefined>()
 
   const conyuge = useConyuge(id)
   const dependientes = useDependientes(id)
@@ -33,6 +38,20 @@ export default function NuevoRegistroPage() {
   const finalizar = useFinalizar(id ?? 0)
 
   if (id && isLoading) return <p className="text-sm text-muted-foreground">Cargando registro...</p>
+
+  if (!id && !gatePassed) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Nuevo registro" description="Primero valida que el cliente no esté ya registrado." />
+        <ValidacionContacto
+          onNuevo={(datos) => {
+            setDatosIniciales(datos)
+            setGatePassed(true)
+          }}
+        />
+      </div>
+    )
+  }
 
   const editable = !cliente || cliente.estado === 'borrador' || cliente.estado === 'rechazado_backoffice'
   const clienteId = cliente?.id
@@ -86,6 +105,7 @@ export default function NuevoRegistroPage() {
             <TitularStep
               cliente={cliente}
               editable={editable}
+              prellenar={datosIniciales}
               onCreated={(newId) => navigate(`/clientes/${newId}/editar`, { replace: true })}
             />
           </AccordionContent>

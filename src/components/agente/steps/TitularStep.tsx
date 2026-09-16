@@ -54,13 +54,16 @@ function edadDe(fecha: string): number | null {
 export function TitularStep({
   cliente,
   editable,
+  prellenar,
   onCreated,
 }: {
   cliente?: Cliente
   editable: boolean
+  /** Teléfono/código postal que el agente ya validó en la compuerta de "Nuevo registro" — se usan tal cual, no hay que volver a escribirlos. */
+  prellenar?: { phone_1: string; codigo_postal: string }
   onCreated?: (id: number) => void
 }) {
-  const [form, setForm] = useState(empty)
+  const [form, setForm] = useState(() => (prellenar ? { ...empty, ...prellenar } : empty))
   const crear = useCrearCliente()
   const actualizar = useActualizarTitular(cliente?.id ?? 0)
   const busy = crear.isPending || actualizar.isPending

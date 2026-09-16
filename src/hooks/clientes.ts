@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type {
   Cliente,
+  ClienteContacto,
   ClienteDetalle,
   ClienteDuplicado,
   ClienteListItem,
@@ -40,6 +41,16 @@ export const useVerificarDuplicado = (social: string, correo: string, enabled: b
     enabled: enabled && (social.length === 9 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)),
     staleTime: 10_000,
   })
+
+/** Compuerta antes de "Nuevo registro": valida teléfono + código postal a
+ * pedido (botón "Validar"), no en automático — por eso es mutation y no
+ * query. */
+export function useVerificarTelefono() {
+  return useMutation({
+    mutationFn: async ({ telefono, codigoPostal }: { telefono: string; codigoPostal: string }) =>
+      (await api.get<ClienteContacto[]>('/clientes/verificar-telefono', { params: { telefono, codigoPostal } })).data,
+  })
+}
 
 function invalidateCliente(qc: ReturnType<typeof useQueryClient>, id: string | number) {
   qc.invalidateQueries({ queryKey: ['clientes', 'detalle', id] })
