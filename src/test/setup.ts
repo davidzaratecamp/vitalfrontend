@@ -20,3 +20,9 @@ if (!window.ResizeObserver) {
     disconnect() {}
   }
 }
+
+// Tampoco implementa scrollIntoView — hace falta para abrir un <Select> de
+// Radix (posiciona la opción resaltada al abrir).
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}

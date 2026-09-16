@@ -5,16 +5,31 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '../FormField'
 import { usePlanSalud, useSetPlanSalud } from '@/hooks/clientes'
-import { useAseguradoras } from '@/hooks/catalogos'
+import { useAseguradoras, useAseguradorasPorZip } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { TIPO_METAL, TIPO_RED } from '@/lib/clienteConstants'
 
 const empty = { aseguradora_id: '', nombre_plan: '', tipo_metal: '', tipo_red: '', deducible: '', gasto_max_bolsillo: '', valor_prima: '' }
 
-export function PlanSaludStep({ clienteId, editable }: { clienteId: number; editable: boolean }) {
+export function PlanSaludStep({
+  clienteId,
+  editable,
+  codigoPostal,
+}: {
+  /** Sin cliente todavía (antes de guardar el Paso 1) el paso se puede ver
+   * — para saber qué ofrecer desde ya — pero no guardar. */
+  clienteId?: number
+  editable: boolean
+  codigoPostal?: string
+}) {
   const { data: plan, isLoading } = usePlanSalud(clienteId)
-  const { data: aseguradoras } = useAseguradoras()
-  const setPlan = useSetPlanSalud(clienteId)
+  const { data: todasLasAseguradoras } = useAseguradoras()
+  const { data: porZip } = useAseguradorasPorZip(codigoPostal)
+  // Si el ZIP tiene cobertura definida, se limita a esas — si no, el
+  // catálogo completo (nunca se bloquea el paso por falta de datos de
+  // cobertura).
+  const aseguradoras = porZip?.length ? porZip : todasLasAseguradoras
+  const setPlan = useSetPlanSalud(clienteId ?? 0)
   const [form, setForm] = useState(empty)
 
   useEffect(() => {
@@ -34,6 +49,7 @@ export function PlanSaludStep({ clienteId, editable }: { clienteId: number; edit
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if (!clienteId) return
     try {
       await setPlan.mutateAsync({
         aseguradora_id: Number(form.aseguradora_id),
@@ -57,6 +73,19 @@ export function PlanSaludStep({ clienteId, editable }: { clienteId: number; edit
       {plan?.version_origen === 'confirmado_backoffice' && (
         <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
           Este plan ya fue confirmado por BackOffice. Si lo modificas aquí, se registra como una nueva cotización.
+        </p>
+      )}
+      {codigoPostal && (
+        <p
+          className={`rounded-md px-3 py-2 text-xs ${
+            porZip?.length
+              ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400'
+              : 'bg-secondary text-secondary-foreground'
+          }`}
+        >
+          {porZip?.length
+            ? `${porZip.length} aseguradora${porZip.length > 1 ? 's' : ''} disponible${porZip.length > 1 ? 's' : ''} para el código postal ${codigoPostal}.`
+            : `Sin cobertura específica definida para el código postal ${codigoPostal} — se muestra el catálogo completo.`}
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -93,8 +122,11 @@ export function PlanSaludStep({ clienteId, editable }: { clienteId: number; edit
           <Input type="number" min={0.01} step="0.01" value={form.valor_prima} onChange={(e) => set('valor_prima', e.target.value)} required disabled={!editable} />
         </FormField>
       </div>
+      {editable && !clienteId && (
+        <p className="text-xs text-muted-foreground">Completa y guarda el Paso 1 (Datos del titular) para poder guardar este paso — por ahora solo puedes ver qué aseguradoras ofrecer.</p>
+      )}
       {editable && (
-        <Button type="submit" disabled={setPlan.isPending}>{setPlan.isPending ? 'Guardando...' : 'Guardar paso'}</Button>
+        <Button type="submit" disabled={setPlan.isPending || !clienteId}>{setPlan.isPending ? 'Guardando...' : 'Guardar paso'}</Button>
       )}
     </form>
   )

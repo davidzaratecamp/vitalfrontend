@@ -8,6 +8,17 @@ export const useAseguradoras = (active = true) =>
     queryFn: async () => (await api.get<Aseguradora[]>('/catalogos/aseguradoras', { params: { active } })).data,
   })
 
+/** Aseguradoras que sí se le pueden ofrecer al cliente, según su código
+ * postal (Base Estados y Coberturas Vital 2026). Vacío si ese ZIP no está
+ * en la lista — no es un error, ese estado simplemente no está cubierto
+ * todavía. */
+export const useAseguradorasPorZip = (codigoPostal?: string) =>
+  useQuery({
+    queryKey: ['aseguradoras-por-zip', codigoPostal],
+    queryFn: async () => (await api.get<Aseguradora[]>('/catalogos/aseguradoras-por-zip', { params: { codigoPostal } })).data,
+    enabled: !!codigoPostal && codigoPostal.length === 5,
+  })
+
 export function useCrearAseguradora() {
   const qc = useQueryClient()
   return useMutation({

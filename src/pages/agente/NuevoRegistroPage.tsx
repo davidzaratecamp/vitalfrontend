@@ -16,6 +16,7 @@ import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar } from '@/hooks/clientes'
+import { useAseguradorasPorZip } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
 
@@ -36,6 +37,13 @@ export default function NuevoRegistroPage() {
   const pago = usePago(id)
   const evidencias = useEvidencias(id)
   const finalizar = useFinalizar(id ?? 0)
+  // El ZIP ya se conoce desde la compuerta de validación, antes incluso de
+  // guardar el Paso 1 — por eso el Paso 5 puede mostrar cobertura "desde el
+  // minuto 1" sin esperar a que exista el cliente. Todos los hooks van
+  // antes de los `return` de abajo — si no, React se queja (con razón: el
+  // orden de hooks no puede depender de una condición).
+  const codigoPostalActivo = cliente?.codigo_postal || datosIniciales?.codigo_postal
+  const cobertura = useAseguradorasPorZip(codigoPostalActivo)
 
   if (id && isLoading) return <p className="text-sm text-muted-foreground">Cargando registro...</p>
 
@@ -141,14 +149,29 @@ export default function NuevoRegistroPage() {
           <AccordionContent>{clienteId && <IngresosStep clienteId={clienteId} editable={editable} />}</AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="plan" disabled={!clienteId}>
+        <AccordionItem value="plan" disabled={!codigoPostalActivo}>
           <AccordionTrigger>
             <span className="flex flex-1 items-center justify-between gap-3">
               <span className="flex items-center gap-2"><Users className="size-4" /> 5 · Plan de salud cotizado</span>
-              <StepStatus status={plan.data ? 'completo' : 'vacio'} />
+              <span className="flex items-center gap-2">
+                {codigoPostalActivo && (
+                  <span
+                    className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                      cobertura.data?.length
+                        ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                        : 'bg-secondary text-secondary-foreground'
+                    }`}
+                  >
+                    {cobertura.data?.length ? `${cobertura.data.length} aseguradoras disponibles` : 'Sin cobertura definida'}
+                  </span>
+                )}
+                <StepStatus status={plan.data ? 'completo' : 'vacio'} />
+              </span>
             </span>
           </AccordionTrigger>
-          <AccordionContent>{clienteId && <PlanSaludStep clienteId={clienteId} editable={editable} />}</AccordionContent>
+          <AccordionContent>
+            <PlanSaludStep clienteId={clienteId} editable={editable} codigoPostal={codigoPostalActivo} />
+          </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="pago" disabled={!clienteId}>
