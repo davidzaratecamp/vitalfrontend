@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Copy, Search, TriangleAlert, UserRound } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -7,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormField } from './FormField'
 import { useVerificarTelefono } from '@/hooks/clientes'
-import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL } from '@/lib/clienteConstants'
 import type { ClienteContacto } from '@/lib/types'
@@ -20,8 +18,6 @@ import type { ClienteContacto } from '@/lib/types'
  * el formulario solo, el agente decide qué hacer con esa información.
  */
 export function ValidacionContacto({ onNuevo }: { onNuevo: (datos: { phone_1: string; codigo_postal: string }) => void }) {
-  const navigate = useNavigate()
-  const userId = useAuthStore((s) => s.user?.id)
   const [telefono, setTelefono] = useState('')
   const [codigoPostal, setCodigoPostal] = useState('')
   const [coincidencias, setCoincidencias] = useState<ClienteContacto[] | null>(null)
@@ -105,16 +101,9 @@ export function ValidacionContacto({ onNuevo }: { onNuevo: (datos: { phone_1: st
                     </p>
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-1.5">
-                  <Button type="button" variant="outline" size="sm" onClick={() => copiarId(c.id)}>
-                    <Copy className="size-3.5" /> ID
-                  </Button>
-                  {c.agente_id === userId && (
-                    <Button type="button" size="sm" onClick={() => navigate(`/clientes/${c.id}/editar`)}>
-                      Ver cliente
-                    </Button>
-                  )}
-                </div>
+                <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => copiarId(c.id)}>
+                  <Copy className="size-3.5" /> ID
+                </Button>
               </div>
             ))}
           </div>
