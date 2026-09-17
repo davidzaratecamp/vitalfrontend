@@ -84,6 +84,7 @@ export interface PlanSalud {
   deducible: string | null
   gasto_max_bolsillo: string | null
   valor_prima: string
+  taxes: string | null
   npn: string | null
   estado_prima: string | null
   version_origen: 'cotizado_agente' | 'confirmado_backoffice'

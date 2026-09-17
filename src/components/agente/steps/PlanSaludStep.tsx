@@ -9,7 +9,7 @@ import { useAseguradoras, useAseguradorasPorZip } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { TIPO_METAL, TIPO_RED } from '@/lib/clienteConstants'
 
-const empty = { aseguradora_id: '', nombre_plan: '', tipo_metal: '', tipo_red: '', deducible: '', gasto_max_bolsillo: '', valor_prima: '' }
+const empty = { aseguradora_id: '', nombre_plan: '', tipo_metal: '', tipo_red: '', deducible: '', gasto_max_bolsillo: '', valor_prima: '', taxes: '' }
 
 export function PlanSaludStep({
   clienteId,
@@ -42,6 +42,7 @@ export function PlanSaludStep({
       deducible: plan.deducible ?? '',
       gasto_max_bolsillo: plan.gasto_max_bolsillo ?? '',
       valor_prima: plan.valor_prima,
+      taxes: plan.taxes ?? '',
     })
   }, [plan])
 
@@ -59,6 +60,7 @@ export function PlanSaludStep({
         deducible: form.deducible === '' ? null : Number(form.deducible),
         gasto_max_bolsillo: form.gasto_max_bolsillo === '' ? null : Number(form.gasto_max_bolsillo),
         valor_prima: Number(form.valor_prima),
+        taxes: form.taxes === '' ? null : Number(form.taxes),
       })
       toast.success('Plan de salud guardado')
     } catch (err) {
@@ -120,6 +122,9 @@ export function PlanSaludStep({
         </FormField>
         <FormField label="Valor de la prima (USD)" required>
           <Input type="number" min={0.01} step="0.01" value={form.valor_prima} onChange={(e) => set('valor_prima', e.target.value)} required disabled={!editable} />
+        </FormField>
+        <FormField label="Taxes (USD)">
+          <Input type="number" min={0} step="0.01" value={form.taxes} onChange={(e) => set('taxes', e.target.value)} disabled={!editable} />
         </FormField>
       </div>
       {editable && !clienteId && (
