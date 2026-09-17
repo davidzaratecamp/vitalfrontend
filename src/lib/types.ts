@@ -110,14 +110,24 @@ export interface PlanSalud {
   created_at: string
 }
 
+export type MarcaTarjeta = 'Visa' | 'Mastercard' | 'Otra'
+
 export interface InformacionPago {
   id: number
   cliente_id: number
   metodo: 'tarjeta' | 'debito_automatico' | 'otro'
   ultimos_4_digitos: string | null
+  marca_tarjeta: MarcaTarjeta | null
   nombre_titular_tarjeta: string | null
   fecha_expiracion_mes: number | null
   fecha_expiracion_ano: number | null
+}
+
+/** Solo BackOffice/Admin — GET /clientes/:id/pago/numero-completo, queda
+ * auditado en el servidor (accesos_tarjeta) en cada llamada. */
+export interface NumeroTarjetaCompleto {
+  numero_tarjeta: string
+  marca_tarjeta: MarcaTarjeta | null
 }
 
 export interface Evidencia {

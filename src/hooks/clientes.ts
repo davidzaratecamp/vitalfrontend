@@ -10,6 +10,7 @@ import type {
   Evidencia,
   Ingreso,
   InformacionPago,
+  NumeroTarjetaCompleto,
   PlanSalud,
 } from '@/lib/types'
 
@@ -202,6 +203,15 @@ export const usePago = (id: string | number | undefined) =>
     queryFn: async () => (await api.get<InformacionPago | null>(`/clientes/${id}/pago`)).data,
     enabled: id != null,
   })
+
+/** Bajo demanda (no automático): cada llamada queda auditada en el
+ * servidor, así que solo se pide cuando BackOffice/Admin hace clic en "Ver
+ * número completo" — no al cargar la pantalla. */
+export function useNumeroTarjetaCompleto(id: string | number) {
+  return useMutation({
+    mutationFn: async () => (await api.get<NumeroTarjetaCompleto | null>(`/clientes/${id}/pago/numero-completo`)).data,
+  })
+}
 
 export function useSetPago(id: string | number) {
   const qc = useQueryClient()

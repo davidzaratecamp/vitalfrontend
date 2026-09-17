@@ -5,12 +5,15 @@ export function FormField({
   label,
   htmlFor,
   required,
+  hint,
   className,
   children,
 }: {
   label: string
   htmlFor?: string
   required?: boolean
+  /** Nota corta bajo el campo (ej. "ya hay una tarjeta guardada"). */
+  hint?: string
   className?: string
   children: ReactNode
 }) {
@@ -20,6 +23,7 @@ export function FormField({
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       {children}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   )
 }
