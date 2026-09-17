@@ -5,11 +5,24 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '../FormField'
 import { usePlanSalud, useSetPlanSalud } from '@/hooks/clientes'
-import { useAseguradoras, useAseguradorasPorZip } from '@/hooks/catalogos'
+import { useAseguradoras, useAseguradorasPorZip, useNpnProductores } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { TIPO_METAL, TIPO_RED } from '@/lib/clienteConstants'
 
-const empty = { aseguradora_id: '', nombre_plan: '', tipo_metal: '', tipo_red: '', deducible: '', gasto_max_bolsillo: '', valor_prima: '', taxes: '' }
+const empty = {
+  aseguradora_id: '',
+  nombre_plan: '',
+  tipo_metal: '',
+  tipo_red: '',
+  deducible: '',
+  gasto_max_bolsillo: '',
+  valor_prima: '',
+  taxes: '',
+  pd: '',
+  sd: '',
+  gd: '',
+  npn_productor_id: '',
+}
 
 export function PlanSaludStep({
   clienteId,
@@ -25,6 +38,7 @@ export function PlanSaludStep({
   const { data: plan, isLoading } = usePlanSalud(clienteId)
   const { data: todasLasAseguradoras } = useAseguradoras()
   const { data: porZip } = useAseguradorasPorZip(codigoPostal)
+  const { data: productores } = useNpnProductores()
   // Si el ZIP tiene cobertura definida, se limita a esas — si no, el
   // catálogo completo (nunca se bloquea el paso por falta de datos de
   // cobertura).
@@ -43,6 +57,10 @@ export function PlanSaludStep({
       gasto_max_bolsillo: plan.gasto_max_bolsillo ?? '',
       valor_prima: plan.valor_prima,
       taxes: plan.taxes ?? '',
+      pd: plan.pd ?? '',
+      sd: plan.sd ?? '',
+      gd: plan.gd ?? '',
+      npn_productor_id: plan.npn_productor_id ? String(plan.npn_productor_id) : '',
     })
   }, [plan])
 
@@ -61,6 +79,10 @@ export function PlanSaludStep({
         gasto_max_bolsillo: form.gasto_max_bolsillo === '' ? null : Number(form.gasto_max_bolsillo),
         valor_prima: Number(form.valor_prima),
         taxes: form.taxes === '' ? null : Number(form.taxes),
+        pd: form.pd === '' ? null : form.pd,
+        sd: form.sd === '' ? null : form.sd,
+        gd: form.gd === '' ? null : form.gd,
+        npn_productor_id: form.npn_productor_id === '' ? null : Number(form.npn_productor_id),
       })
       toast.success('Plan de salud guardado')
     } catch (err) {
@@ -126,6 +148,30 @@ export function PlanSaludStep({
         <FormField label="Taxes (USD)">
           <Input type="number" min={0} step="0.01" value={form.taxes} onChange={(e) => set('taxes', e.target.value)} disabled={!editable} />
         </FormField>
+        <FormField label="Productor (NPN)">
+          <Select value={form.npn_productor_id} onValueChange={(v) => set('npn_productor_id', v)} disabled={!editable}>
+            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
+            <SelectContent>
+              {productores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </FormField>
+      </div>
+      <div className="space-y-3 rounded-md border p-3">
+        <p className="text-xs font-medium text-muted-foreground">
+          Cobertura para la carta de firma — cópialo tal como aparece en la pantalla "Usted paga" (ej. "Sin cargo por visita desde el día 1", "$100 por visita desde el día 1", "50% coaseguro después del deducible").
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <FormField label="Atención primaria (PD)">
+            <Input value={form.pd} onChange={(e) => set('pd', e.target.value)} disabled={!editable} placeholder="Sin cargo por visita desde el día 1" />
+          </FormField>
+          <FormField label="Atención de especialista (SD)">
+            <Input value={form.sd} onChange={(e) => set('sd', e.target.value)} disabled={!editable} placeholder="$100 por visita desde el día 1" />
+          </FormField>
+          <FormField label="Medicamento genérico (GD)">
+            <Input value={form.gd} onChange={(e) => set('gd', e.target.value)} disabled={!editable} placeholder="$35 Copago después del deducible" />
+          </FormField>
+        </div>
       </div>
       {editable && !clienteId && (
         <p className="text-xs text-muted-foreground">Completa y guarda el Paso 1 (Datos del titular) para poder guardar este paso — por ahora solo puedes ver qué aseguradoras ofrecer.</p>

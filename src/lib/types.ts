@@ -18,6 +18,16 @@ export interface Aseguradora {
   is_active: boolean
 }
 
+/** Productor con NPN — catálogo pequeño (4 personas licenciadas, no 1 por
+ * agente) elegido por desplegable en el Paso 5, para la carta de firma
+ * (FirmaCloud). `npn` queda nulo hasta que lo suministren. */
+export interface NpnProductor {
+  id: number
+  nombre: string
+  npn: string | null
+  is_active: boolean
+}
+
 export interface Cliente {
   id: number
   agente_id: number
@@ -85,6 +95,14 @@ export interface PlanSalud {
   gasto_max_bolsillo: string | null
   valor_prima: string
   taxes: string | null
+  // Lo que el agente ve en la pantalla "Usted paga" de la otra plataforma —
+  // texto libre (ej. "Sin cargo por visita desde el día 1", "50% coaseguro
+  // después del deducible"), no un número limpio.
+  pd: string | null
+  sd: string | null
+  gd: string | null
+  npn_productor_id: number | null
+  npn_productor_nombre?: string | null
   npn: string | null
   estado_prima: string | null
   version_origen: 'cotizado_agente' | 'confirmado_backoffice'

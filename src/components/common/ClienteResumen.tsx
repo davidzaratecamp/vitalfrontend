@@ -85,6 +85,10 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
               <Row label="Gasto máx. bolsillo" value={c.plan_salud.gasto_max_bolsillo ? `$${num(Number(c.plan_salud.gasto_max_bolsillo))}` : '—'} />
               <Row label="Prima" value={`$${num(Number(c.plan_salud.valor_prima))}`} />
               <Row label="Taxes" value={c.plan_salud.taxes ? `$${num(Number(c.plan_salud.taxes))}` : '—'} />
+              <Row label="Atención primaria (PD)" value={c.plan_salud.pd} />
+              <Row label="Atención de especialista (SD)" value={c.plan_salud.sd} />
+              <Row label="Medicamento genérico (GD)" value={c.plan_salud.gd} />
+              <Row label="Productor (NPN)" value={c.plan_salud.npn_productor_nombre} />
               <Row label="NPN" value={c.plan_salud.npn} />
               <Row label="Estado de la prima" value={c.plan_salud.estado_prima} />
               <Row label="Origen" value={c.plan_salud.version_origen === 'confirmado_backoffice' ? 'Confirmado por BackOffice' : 'Cotizado por el agente'} />
