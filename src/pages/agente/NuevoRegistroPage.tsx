@@ -17,6 +17,7 @@ import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar } from '@/hooks/clientes'
+import { useFirmas } from '@/hooks/firmas'
 import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
@@ -41,6 +42,7 @@ export default function NuevoRegistroPage() {
   const plan = usePlanSalud(id)
   const pago = usePago(id)
   const evidencias = useEvidencias(id)
+  const firmas = useFirmas(id)
   const finalizar = useFinalizar(id ?? 0)
   // Todos los hooks van antes de los `return` de abajo — si no, React se
   // queja (con razón: el orden de hooks no puede depender de una condición).
@@ -67,6 +69,12 @@ export default function NuevoRegistroPage() {
   const clienteId = cliente?.id
 
   const ingresoTitularOk = ingresos.data?.rows.some((r) => r.dependiente_id == null)
+  // "Subir venta" (Finalizar) exige que el cliente ya haya firmado la carta
+  // — el agente usa el botón "Actualizar estado" de FirmaCartaCard para
+  // refrescar esto (el webhook no le puede llegar a Vital). El backend
+  // también lo exige (finalizar() en clientes.service.js), esto es solo
+  // para no ofrecer un botón que va a fallar.
+  const firmaFirmada = firmas.data?.[0]?.estado === 'signed'
 
   async function onFinalizar() {
     try {
@@ -203,9 +211,11 @@ export default function NuevoRegistroPage() {
       {editable && clienteId && (
         <Card className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Cuando todos los pasos estén listos, finaliza para enviarlo a BackOffice.
+            {firmaFirmada
+              ? 'Cuando todos los pasos estén listos, finaliza para enviarlo a BackOffice.'
+              : 'Falta que el cliente firme la carta (CMS) — usa "Actualizar estado" arriba apenas firme, para poder finalizar.'}
           </p>
-          <Button onClick={onFinalizar} disabled={finalizar.isPending}>
+          <Button onClick={onFinalizar} disabled={finalizar.isPending || !firmaFirmada}>
             <CheckCircle2 className="size-4" />
             {finalizar.isPending ? 'Enviando...' : cliente?.estado === 'rechazado_backoffice' ? 'Reenviar a BackOffice' : 'Finalizar y enviar a BackOffice'}
           </Button>

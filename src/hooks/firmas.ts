@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { FirmaDocumento } from '@/lib/types'
 
-export const useFirmas = (clienteId: number | undefined) =>
+export const useFirmas = (clienteId: string | number | undefined) =>
   useQuery({
     queryKey: ['clientes', clienteId, 'firmas'],
     queryFn: async () => (await api.get<FirmaDocumento[]>(`/firmas/cliente/${clienteId}`)).data,
