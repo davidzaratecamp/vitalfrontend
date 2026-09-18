@@ -7,6 +7,9 @@ export interface AdminFilters {
   from?: string
   to?: string
   agenteId?: number | string
+  /** Admin puede elegir (Vital / Vital Asiste) — para supervisor el
+   * backend lo ignora y fuerza el suyo propio, siempre. */
+  empresaId?: number | string
 }
 
 export const useDashboard = (filters: AdminFilters = {}) =>

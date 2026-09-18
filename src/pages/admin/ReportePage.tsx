@@ -12,23 +12,31 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SearchSelect } from '@/components/common/SearchSelect'
 import { useReporte, descargarReporteCsv } from '@/hooks/admin'
 import { useUsuarios } from '@/hooks/usuarios'
+import { useEmpresas } from '@/hooks/catalogos'
+import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
 import { fmtDate } from '@/lib/dateFormat'
 
 export default function ReportePage() {
   const navigate = useNavigate()
+  const esAdmin = useAuthStore((s) => s.user?.role) === 'admin'
   const [estado, setEstado] = useState('all')
   const [agenteId, setAgenteId] = useState('all')
+  // Solo admin puede elegir — supervisor ve la suya sin desplegable, el
+  // backend la fuerza siempre, sin importar lo que se mande acá.
+  const [empresaId, setEmpresaId] = useState('all')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [page, setPage] = useState(1)
   const [downloading, setDownloading] = useState(false)
 
   const { data: agentes } = useUsuarios('agente')
+  const { data: empresas } = useEmpresas()
   const filters = {
     estado: estado === 'all' ? undefined : estado,
     agenteId: agenteId === 'all' ? undefined : agenteId,
+    empresaId: esAdmin && empresaId !== 'all' ? empresaId : undefined,
     from: from || undefined,
     to: to || undefined,
     page,
@@ -76,6 +84,15 @@ export default function ReportePage() {
           placeholder="Buscar agente..."
           allLabel="Cualquier agente"
         />
+        {esAdmin && (
+          <Select value={empresaId} onValueChange={(v) => { setEmpresaId(v); setPage(1) }}>
+            <SelectTrigger className="h-9 w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cualquier empresa</SelectItem>
+              {empresas?.map((e) => <SelectItem key={e.id} value={String(e.id)}>{e.nombre}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Desde</label>
           <Input type="date" className="h-9" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1) }} />

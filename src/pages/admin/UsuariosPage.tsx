@@ -12,18 +12,23 @@ import { UserAvatar } from '@/components/common/UserAvatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useUsuarios, useCrearUsuario, useActualizarUsuario, useDesactivarUsuario } from '@/hooks/usuarios'
+import { useEmpresas } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { ROLE_OPTIONS, ROLE_LABEL } from '@/lib/roles'
 import type { User } from '@/lib/types'
 
+// Admin no tiene empresa (ve las dos) — el resto de roles sí necesita una.
+const ROLES_CON_EMPRESA = new Set(['agente', 'backoffice', 'supervisor'])
+
 export default function UsuariosPage() {
   const { data: usuarios, isLoading } = useUsuarios()
+  const { data: empresas } = useEmpresas()
   const crear = useCrearUsuario()
   const actualizar = useActualizarUsuario()
   const desactivar = useDesactivarUsuario()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<User | undefined>()
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'agente', cedula: '', phone: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'agente', cedula: '', phone: '', empresa_id: '' })
 
   useEffect(() => {
     if (!open) return
@@ -34,6 +39,7 @@ export default function UsuariosPage() {
       role: editing?.role ?? 'agente',
       cedula: editing?.cedula ?? '',
       phone: editing?.phone ?? '',
+      empresa_id: editing?.empresa_id ? String(editing.empresa_id) : '',
     })
   }, [open, editing])
 
@@ -42,8 +48,15 @@ export default function UsuariosPage() {
     setOpen(true)
   }
 
+  const necesitaEmpresa = ROLES_CON_EMPRESA.has(form.role)
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if (necesitaEmpresa && !form.empresa_id) {
+      toast.error('Este rol necesita una empresa asignada (Vital / Vital Asiste)')
+      return
+    }
+    const empresa_id = necesitaEmpresa ? Number(form.empresa_id) : null
     try {
       if (editing) {
         const body: Record<string, unknown> = {
@@ -52,12 +65,13 @@ export default function UsuariosPage() {
           role: form.role,
           cedula: form.cedula || null,
           phone: form.phone || null,
+          empresa_id,
         }
         if (form.password) body.password = form.password
         await actualizar.mutateAsync({ id: editing.id, ...body })
         toast.success('Usuario actualizado')
       } else {
-        await crear.mutateAsync({ ...form, cedula: form.cedula || null, phone: form.phone || null })
+        await crear.mutateAsync({ ...form, cedula: form.cedula || null, phone: form.phone || null, empresa_id })
         toast.success('Usuario creado')
       }
       setOpen(false)
@@ -85,7 +99,7 @@ export default function UsuariosPage() {
     <div className="space-y-6">
       <PageHeader
         title="Usuarios del sistema"
-        description="Cuentas de agente, backoffice y administrador."
+        description="Cuentas de agente, backoffice, supervisor y administrador."
         actions={<Button onClick={() => abrir()}><Plus className="size-4" /> Nuevo usuario</Button>}
       />
 
@@ -102,6 +116,7 @@ export default function UsuariosPage() {
                 <p className="truncate text-sm font-medium">{u.name} {!u.is_active && <span className="text-xs text-muted-foreground">(inactivo)</span>}</p>
                 <p className="truncate text-xs text-muted-foreground">{u.email}</p>
               </div>
+              {u.empresa_nombre && <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">{u.empresa_nombre}</span>}
               <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium">{ROLE_LABEL[u.role]}</span>
               <Button variant="outline" size="sm" onClick={() => abrir(u)}>Editar</Button>
               <Button variant={u.is_active ? 'destructive' : 'outline'} size="sm" onClick={() => toggleActive(u)}>
@@ -128,12 +143,25 @@ export default function UsuariosPage() {
               <Label>{editing ? 'Nueva contraseña (opcional)' : 'Contraseña'}</Label>
               <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editing} placeholder={editing ? 'Dejar vacío para no cambiarla' : 'Mínimo 8 caracteres'} />
             </div>
-            <div className="space-y-1.5">
-              <Label>Rol</Label>
-              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ROLE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Rol</Label>
+                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{ROLE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              {necesitaEmpresa && (
+                <div className="space-y-1.5">
+                  <Label>Empresa</Label>
+                  <Select value={form.empresa_id} onValueChange={(v) => setForm({ ...form, empresa_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                    <SelectContent>
+                      {empresas?.map((e) => <SelectItem key={e.id} value={String(e.id)}>{e.nombre}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

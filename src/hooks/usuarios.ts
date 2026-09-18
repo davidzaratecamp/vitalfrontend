@@ -11,8 +11,15 @@ export const useUsuarios = (role?: string) =>
 export function useCrearUsuario() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (body: { name: string; email: string; password: string; role: string; cedula?: string | null; phone?: string | null }) =>
-      (await api.post<User>('/usuarios-sistema', body)).data,
+    mutationFn: async (body: {
+      name: string
+      email: string
+      password: string
+      role: string
+      cedula?: string | null
+      phone?: string | null
+      empresa_id?: number | null
+    }) => (await api.post<User>('/usuarios-sistema', body)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['usuarios-sistema'] }),
   })
 }
@@ -23,8 +30,16 @@ export function useActualizarUsuario() {
     mutationFn: async ({
       id,
       ...body
-    }: { id: number } & Partial<{ name: string; email: string; password: string; role: string; is_active: boolean; cedula: string | null; phone: string | null }>) =>
-      (await api.patch<User>(`/usuarios-sistema/${id}`, body)).data,
+    }: { id: number } & Partial<{
+      name: string
+      email: string
+      password: string
+      role: string
+      is_active: boolean
+      cedula: string | null
+      phone: string | null
+      empresa_id: number | null
+    }>) => (await api.patch<User>(`/usuarios-sistema/${id}`, body)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['usuarios-sistema'] }),
   })
 }

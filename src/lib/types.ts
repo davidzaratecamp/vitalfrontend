@@ -1,5 +1,13 @@
 export type Role = 'agente' | 'backoffice' | 'admin' | 'supervisor'
 
+/** Vital absorbió a la extinta Asiste Health Care ("Vital Asiste") pero
+ * ambos lados quedan separados entre sí — agente/backoffice/supervisor
+ * pertenecen a una sola. Admin no necesita una: ve las dos. */
+export interface Empresa {
+  id: number
+  nombre: string
+}
+
 export interface User {
   id: number
   name: string
@@ -11,6 +19,8 @@ export interface User {
   // enviar, phone es opcional. Se cargan desde Usuarios del sistema.
   cedula?: string | null
   phone?: string | null
+  empresa_id?: number | null
+  empresa_nombre?: string | null
   created_at?: string
 }
 

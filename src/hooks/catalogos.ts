@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { Aseguradora, NpnProductor } from '@/lib/types'
+import type { Aseguradora, NpnProductor, Empresa } from '@/lib/types'
+
+/** Vital / Vital Asiste — para el desplegable al crear/editar un usuario y
+ * para el filtro de admin en Reporte/Dashboard. */
+export const useEmpresas = () =>
+  useQuery({
+    queryKey: ['empresas'],
+    queryFn: async () => (await api.get<Empresa[]>('/catalogos/empresas')).data,
+  })
 
 export const useAseguradoras = (active = true) =>
   useQuery({
