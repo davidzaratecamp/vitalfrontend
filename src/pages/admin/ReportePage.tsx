@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useReporte, descargarReporteCsv } from '@/hooks/admin'
+import { useUsuarios } from '@/hooks/usuarios'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
 import { fmtDate } from '@/lib/dateFormat'
@@ -17,12 +18,21 @@ import { fmtDate } from '@/lib/dateFormat'
 export default function ReportePage() {
   const navigate = useNavigate()
   const [estado, setEstado] = useState('all')
+  const [agenteId, setAgenteId] = useState('all')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [page, setPage] = useState(1)
   const [downloading, setDownloading] = useState(false)
 
-  const filters = { estado: estado === 'all' ? undefined : estado, from: from || undefined, to: to || undefined, page, pageSize: 50 }
+  const { data: agentes } = useUsuarios('agente')
+  const filters = {
+    estado: estado === 'all' ? undefined : estado,
+    agenteId: agenteId === 'all' ? undefined : agenteId,
+    from: from || undefined,
+    to: to || undefined,
+    page,
+    pageSize: 50,
+  }
   const { data, isLoading, isFetching } = useReporte(filters)
 
   async function exportar() {
@@ -55,6 +65,13 @@ export default function ReportePage() {
           <SelectContent>
             <SelectItem value="all">Cualquier estado</SelectItem>
             {Object.entries(ESTADO_CLIENTE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={agenteId} onValueChange={(v) => { setAgenteId(v); setPage(1) }}>
+          <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Cualquier agente</SelectItem>
+            {agentes?.map((a) => <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <div className="space-y-1">
