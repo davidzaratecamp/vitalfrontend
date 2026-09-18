@@ -17,7 +17,7 @@ import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar } from '@/hooks/clientes'
-import { useAseguradorasPorZip } from '@/hooks/catalogos'
+import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
 
@@ -29,7 +29,11 @@ export default function NuevoRegistroPage() {
   // La compuerta solo aplica al crear (sin :id en la URL) — corregir un
   // registro existente (con :id) nunca pasa por acá.
   const [gatePassed, setGatePassed] = useState(() => !!id)
-  const [datosIniciales, setDatosIniciales] = useState<{ phone_1: string; codigo_postal: string } | undefined>()
+  const [datosIniciales, setDatosIniciales] = useState<{ phone_1: string } | undefined>()
+  // Se llena apenas el agente elige un estado en el Paso 1 — antes incluso
+  // de guardarlo — así el Paso 5 puede mostrar cobertura "desde el minuto
+  // 1". Si se reabre un cliente ya guardado, arranca con su estado real.
+  const [estadoElegido, setEstadoElegido] = useState('')
 
   const conyuge = useConyuge(id)
   const dependientes = useDependientes(id)
@@ -38,13 +42,10 @@ export default function NuevoRegistroPage() {
   const pago = usePago(id)
   const evidencias = useEvidencias(id)
   const finalizar = useFinalizar(id ?? 0)
-  // El ZIP ya se conoce desde la compuerta de validación, antes incluso de
-  // guardar el Paso 1 — por eso el Paso 5 puede mostrar cobertura "desde el
-  // minuto 1" sin esperar a que exista el cliente. Todos los hooks van
-  // antes de los `return` de abajo — si no, React se queja (con razón: el
-  // orden de hooks no puede depender de una condición).
-  const codigoPostalActivo = cliente?.codigo_postal || datosIniciales?.codigo_postal
-  const cobertura = useAseguradorasPorZip(codigoPostalActivo)
+  // Todos los hooks van antes de los `return` de abajo — si no, React se
+  // queja (con razón: el orden de hooks no puede depender de una condición).
+  const estadoActivo = cliente?.estado_us || estadoElegido
+  const cobertura = useAseguradorasPorEstado(estadoActivo)
 
   if (id && isLoading) return <p className="text-sm text-muted-foreground">Cargando registro...</p>
 
@@ -116,6 +117,7 @@ export default function NuevoRegistroPage() {
               editable={editable}
               prellenar={datosIniciales}
               onCreated={(newId) => navigate(`/clientes/${newId}/editar`, { replace: true })}
+              onEstadoChange={setEstadoElegido}
             />
           </AccordionContent>
         </AccordionItem>
@@ -150,12 +152,12 @@ export default function NuevoRegistroPage() {
           <AccordionContent>{clienteId && <IngresosStep clienteId={clienteId} editable={editable} />}</AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="plan" disabled={!codigoPostalActivo}>
+        <AccordionItem value="plan" disabled={!estadoActivo}>
           <AccordionTrigger>
             <span className="flex flex-1 items-center justify-between gap-3">
               <span className="flex items-center gap-2"><Users className="size-4" /> 5 · Plan de salud cotizado</span>
               <span className="flex items-center gap-2">
-                {codigoPostalActivo && (
+                {estadoActivo && (
                   <span
                     className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
                       cobertura.data?.length
@@ -171,7 +173,7 @@ export default function NuevoRegistroPage() {
             </span>
           </AccordionTrigger>
           <AccordionContent>
-            <PlanSaludStep clienteId={clienteId} editable={editable} codigoPostal={codigoPostalActivo} />
+            <PlanSaludStep clienteId={clienteId} editable={editable} estado={estadoActivo} />
           </AccordionContent>
         </AccordionItem>
 

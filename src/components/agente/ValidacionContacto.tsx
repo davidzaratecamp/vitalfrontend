@@ -12,27 +12,26 @@ import type { ClienteContacto } from '@/lib/types'
 
 /**
  * Compuerta antes de mostrar el formulario de "Nuevo registro": el agente
- * valida teléfono + código postal. Si no hay ningún cliente con esa
- * combinación exacta, se deja crear uno nuevo (con esos dos datos ya
- * puestos). Si sí existe, se avisa con nombre e ID (copiable) — no se abre
- * el formulario solo, el agente decide qué hacer con esa información.
+ * valida el teléfono. Si no hay ningún cliente con ese teléfono, se deja
+ * crear uno nuevo (con el teléfono ya puesto). Si sí existe, se avisa con
+ * nombre e ID (copiable) — no se abre el formulario solo, el agente decide
+ * qué hacer con esa información.
  */
-export function ValidacionContacto({ onNuevo }: { onNuevo: (datos: { phone_1: string; codigo_postal: string }) => void }) {
+export function ValidacionContacto({ onNuevo }: { onNuevo: (datos: { phone_1: string }) => void }) {
   const [telefono, setTelefono] = useState('')
-  const [codigoPostal, setCodigoPostal] = useState('')
   const [coincidencias, setCoincidencias] = useState<ClienteContacto[] | null>(null)
   const verificar = useVerificarTelefono()
 
-  const listo = telefono.length >= 7 && codigoPostal.length === 5
+  const listo = telefono.length >= 7
 
   async function validar() {
     try {
-      const data = await verificar.mutateAsync({ telefono, codigoPostal })
+      const data = await verificar.mutateAsync({ telefono })
       if (data.length) {
         setCoincidencias(data)
       } else {
         setCoincidencias(null)
-        onNuevo({ phone_1: telefono, codigo_postal: codigoPostal })
+        onNuevo({ phone_1: telefono })
       }
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo validar'))
@@ -49,32 +48,20 @@ export function ValidacionContacto({ onNuevo }: { onNuevo: (datos: { phone_1: st
       <div>
         <h2 className="text-base font-semibold">Antes de empezar, valida el contacto</h2>
         <p className="text-sm text-muted-foreground">
-          Escribe el teléfono y código postal del cliente — así confirmamos que no esté ya registrado antes de abrir un formulario nuevo.
+          Escribe el teléfono del cliente — así confirmamos que no esté ya registrado antes de abrir un formulario nuevo.
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Teléfono" required>
-          <Input
-            value={telefono}
-            onChange={(e) => {
-              setTelefono(e.target.value.replace(/\D/g, '').slice(0, 15))
-              setCoincidencias(null)
-            }}
-            placeholder="3051234567"
-          />
-        </FormField>
-        <FormField label="Código postal" required>
-          <Input
-            value={codigoPostal}
-            onChange={(e) => {
-              setCodigoPostal(e.target.value.replace(/\D/g, '').slice(0, 5))
-              setCoincidencias(null)
-            }}
-            placeholder="33101"
-          />
-        </FormField>
-      </div>
+      <FormField label="Teléfono" required>
+        <Input
+          value={telefono}
+          onChange={(e) => {
+            setTelefono(e.target.value.replace(/\D/g, '').slice(0, 15))
+            setCoincidencias(null)
+          }}
+          placeholder="3051234567"
+        />
+      </FormField>
 
       <Button onClick={validar} disabled={!listo || verificar.isPending} className="w-full">
         <Search className="size-4" />
@@ -86,7 +73,7 @@ export function ValidacionContacto({ onNuevo }: { onNuevo: (datos: { phone_1: st
           <div className="flex gap-2.5 text-sm">
             <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="font-medium text-amber-700 dark:text-amber-400">
-              Ya existe{coincidencias.length > 1 ? 'n' : ''} {coincidencias.length > 1 ? 'clientes' : 'un cliente'} con ese teléfono y código postal — no se abrió el formulario nuevo.
+              Ya existe{coincidencias.length > 1 ? 'n' : ''} {coincidencias.length > 1 ? 'clientes' : 'un cliente'} con ese teléfono — no se abrió el formulario nuevo.
             </p>
           </div>
           <div className="space-y-2">

@@ -56,17 +56,26 @@ export function TitularStep({
   editable,
   prellenar,
   onCreated,
+  onEstadoChange,
 }: {
   cliente?: Cliente
   editable: boolean
-  /** Teléfono/código postal que el agente ya validó en la compuerta de "Nuevo registro" — se usan tal cual, no hay que volver a escribirlos. */
-  prellenar?: { phone_1: string; codigo_postal: string }
+  /** Teléfono que el agente ya validó en la compuerta de "Nuevo registro" — se usa tal cual, no hay que volver a escribirlo. */
+  prellenar?: { phone_1: string }
   onCreated?: (id: number) => void
+  /** El Paso 5 necesita el estado apenas se elige acá, antes incluso de
+   * guardar este paso — así puede mostrar qué aseguradoras ofrecer "desde
+   * el minuto 1". */
+  onEstadoChange?: (estado: string) => void
 }) {
   const [form, setForm] = useState(() => (prellenar ? { ...empty, ...prellenar } : empty))
   const crear = useCrearCliente()
   const actualizar = useActualizarTitular(cliente?.id ?? 0)
   const busy = crear.isPending || actualizar.isPending
+
+  useEffect(() => {
+    onEstadoChange?.(form.estado_us)
+  }, [form.estado_us, onEstadoChange])
 
   useEffect(() => {
     if (!cliente) return

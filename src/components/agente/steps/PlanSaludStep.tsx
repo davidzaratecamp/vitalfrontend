@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '../FormField'
 import { usePlanSalud, useSetPlanSalud } from '@/hooks/clientes'
-import { useAseguradoras, useAseguradorasPorZip, useAseguradorasPorProductor, useNpnProductores } from '@/hooks/catalogos'
+import { useAseguradoras, useAseguradorasPorEstado, useAseguradorasPorProductor, useNpnProductores } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { TIPO_METAL, TIPO_RED } from '@/lib/clienteConstants'
 
@@ -27,27 +27,29 @@ const empty = {
 export function PlanSaludStep({
   clienteId,
   editable,
-  codigoPostal,
+  estado,
 }: {
   /** Sin cliente todavía (antes de guardar el Paso 1) el paso se puede ver
    * — para saber qué ofrecer desde ya — pero no guardar. */
   clienteId?: number
   editable: boolean
-  codigoPostal?: string
+  /** Estado (EE. UU.) elegido en el Paso 1 — ya no se usa el código postal
+   * para esto. */
+  estado?: string
 }) {
   const { data: plan, isLoading } = usePlanSalud(clienteId)
   const { data: todasLasAseguradoras } = useAseguradoras()
-  const { data: porZip } = useAseguradorasPorZip(codigoPostal)
+  const { data: porEstado } = useAseguradorasPorEstado(estado)
   const { data: productores } = useNpnProductores()
   const [form, setForm] = useState(empty)
   // Dos productores en el mismo estado pueden vender aseguradoras
   // distintas (cada uno licenciado con compañías distintas) — si ya se
-  // eligió un productor, se prioriza SU cobertura sobre la del ZIP en
-  // general; si no tiene datos para este ZIP, se cae al ZIP solo; si
+  // eligió un productor, se prioriza SU cobertura sobre la del estado en
+  // general; si no tiene datos para este estado, se cae al estado solo; si
   // tampoco, al catálogo completo. Nunca se bloquea el paso por falta de
   // datos de cobertura.
-  const { data: porProductor } = useAseguradorasPorProductor(form.npn_productor_id, codigoPostal)
-  const aseguradoras = form.npn_productor_id && porProductor?.length ? porProductor : porZip?.length ? porZip : todasLasAseguradoras
+  const { data: porProductor } = useAseguradorasPorProductor(form.npn_productor_id, estado)
+  const aseguradoras = form.npn_productor_id && porProductor?.length ? porProductor : porEstado?.length ? porEstado : todasLasAseguradoras
   const setPlan = useSetPlanSalud(clienteId ?? 0)
 
   useEffect(() => {
@@ -103,7 +105,7 @@ export function PlanSaludStep({
           Este plan ya fue confirmado por BackOffice. Si lo modificas aquí, se registra como una nueva cotización.
         </p>
       )}
-      {codigoPostal && (
+      {estado && (
         <p
           className={`rounded-md px-3 py-2 text-xs ${
             aseguradoras === todasLasAseguradoras
@@ -112,12 +114,12 @@ export function PlanSaludStep({
           }`}
         >
           {form.npn_productor_id && porProductor?.length
-            ? `${porProductor.length} aseguradora${porProductor.length > 1 ? 's' : ''} que ${productores?.find((p) => String(p.id) === form.npn_productor_id)?.nombre ?? 'este productor'} puede vender en ${codigoPostal}.`
+            ? `${porProductor.length} aseguradora${porProductor.length > 1 ? 's' : ''} que ${productores?.find((p) => String(p.id) === form.npn_productor_id)?.nombre ?? 'este productor'} puede vender en ${estado}.`
             : form.npn_productor_id && porProductor && porProductor.length === 0
-              ? `Este productor no tiene cobertura definida en ${codigoPostal} — se muestra la disponible por código postal.`
-              : porZip?.length
-                ? `${porZip.length} aseguradora${porZip.length > 1 ? 's' : ''} disponible${porZip.length > 1 ? 's' : ''} para el código postal ${codigoPostal}.`
-                : `Sin cobertura específica definida para el código postal ${codigoPostal} — se muestra el catálogo completo.`}
+              ? `Este productor no tiene cobertura definida en ${estado} — se muestra la disponible por estado.`
+              : porEstado?.length
+                ? `${porEstado.length} aseguradora${porEstado.length > 1 ? 's' : ''} disponible${porEstado.length > 1 ? 's' : ''} para ${estado}.`
+                : `Sin cobertura específica definida para ${estado} — se muestra el catálogo completo.`}
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">

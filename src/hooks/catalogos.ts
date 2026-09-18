@@ -8,29 +8,29 @@ export const useAseguradoras = (active = true) =>
     queryFn: async () => (await api.get<Aseguradora[]>('/catalogos/aseguradoras', { params: { active } })).data,
   })
 
-/** Aseguradoras que sí se le pueden ofrecer al cliente, según su código
- * postal (Base Estados y Coberturas Vital 2026). Vacío si ese ZIP no está
- * en la lista — no es un error, ese estado simplemente no está cubierto
- * todavía. */
-export const useAseguradorasPorZip = (codigoPostal?: string) =>
+/** Aseguradoras que sí se le pueden ofrecer al cliente, según su estado
+ * (Base Estados y Coberturas Vital 2026) — ya no se usa el código postal.
+ * Vacío si ese estado no está en la lista — no es un error, ese estado
+ * simplemente no está cubierto todavía. */
+export const useAseguradorasPorEstado = (estado?: string) =>
   useQuery({
-    queryKey: ['aseguradoras-por-zip', codigoPostal],
-    queryFn: async () => (await api.get<Aseguradora[]>('/catalogos/aseguradoras-por-zip', { params: { codigoPostal } })).data,
-    enabled: !!codigoPostal && codigoPostal.length === 5,
+    queryKey: ['aseguradoras-por-estado', estado],
+    queryFn: async () => (await api.get<Aseguradora[]>('/catalogos/aseguradoras-por-estado', { params: { estado } })).data,
+    enabled: !!estado,
   })
 
-/** Aseguradoras que un PRODUCTOR específico puede vender para ese código
- * postal (BaseEstadosy CoberturasVitaldato 2026) — dos productores en el
- * mismo estado pueden tener listas distintas, cada uno licenciado con
- * compañías distintas. Vacío si ese productor no tiene cobertura definida
- * en ese estado — no es error, el Paso 5 igual cae de vuelta al catálogo
- * por ZIP o al completo. */
-export const useAseguradorasPorProductor = (productorId?: string, codigoPostal?: string) =>
+/** Aseguradoras que un PRODUCTOR específico puede vender en ese estado
+ * (BaseEstadosy CoberturasVitaldato 2026) — dos productores en el mismo
+ * estado pueden tener listas distintas, cada uno licenciado con compañías
+ * distintas. Vacío si ese productor no tiene cobertura definida en ese
+ * estado — no es error, el Paso 5 igual cae de vuelta al catálogo por
+ * estado o al completo. */
+export const useAseguradorasPorProductor = (productorId?: string, estado?: string) =>
   useQuery({
-    queryKey: ['aseguradoras-por-productor', productorId, codigoPostal],
+    queryKey: ['aseguradoras-por-productor', productorId, estado],
     queryFn: async () =>
-      (await api.get<Aseguradora[]>('/catalogos/aseguradoras-por-productor', { params: { productorId, codigoPostal } })).data,
-    enabled: !!productorId && !!codigoPostal && codigoPostal.length === 5,
+      (await api.get<Aseguradora[]>('/catalogos/aseguradoras-por-productor', { params: { productorId, estado } })).data,
+    enabled: !!productorId && !!estado,
   })
 
 export function useCrearAseguradora() {

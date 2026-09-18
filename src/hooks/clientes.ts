@@ -44,13 +44,12 @@ export const useVerificarDuplicado = (social: string, correo: string, enabled: b
     staleTime: 10_000,
   })
 
-/** Compuerta antes de "Nuevo registro": valida teléfono + código postal a
- * pedido (botón "Validar"), no en automático — por eso es mutation y no
- * query. */
+/** Compuerta antes de "Nuevo registro": valida el teléfono a pedido (botón
+ * "Validar"), no en automático — por eso es mutation y no query. */
 export function useVerificarTelefono() {
   return useMutation({
-    mutationFn: async ({ telefono, codigoPostal }: { telefono: string; codigoPostal: string }) =>
-      (await api.get<ClienteContacto[]>('/clientes/verificar-telefono', { params: { telefono, codigoPostal } })).data,
+    mutationFn: async ({ telefono }: { telefono: string }) =>
+      (await api.get<ClienteContacto[]>('/clientes/verificar-telefono', { params: { telefono } })).data,
   })
 }
 
