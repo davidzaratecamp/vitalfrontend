@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CardBrandLogo } from './CardBrandLogo'
 import { FirmaCartaCard } from './FirmaCartaCard'
-import { abrirEvidencia, useNumeroTarjetaCompleto, useDataPointCompleto } from '@/hooks/clientes'
+import { abrirEvidencia, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
-import { formatearTarjeta } from '@/lib/card'
 import { num } from '@/lib/analyticsFormat'
 import { fmtDate } from '@/lib/dateFormat'
 import { useAuthStore } from '@/stores/auth'
@@ -32,41 +30,6 @@ async function verEvidencia(id: number, nombreArchivo: string) {
   } catch (err) {
     toast.error(apiErrorMessage(err, 'No se pudo abrir el archivo'))
   }
-}
-
-function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
-  const role = useAuthStore((s) => s.user?.role)
-  const revelar = useNumeroTarjetaCompleto(clienteId)
-  const [numero, setNumero] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!numero) return
-    const t = setTimeout(() => setNumero(null), OCULTAR_TRAS_MS)
-    return () => clearTimeout(t)
-  }, [numero])
-
-  if (role !== 'backoffice' && role !== 'admin') return null
-
-  async function toggle() {
-    if (numero) return setNumero(null)
-    try {
-      const data = await revelar.mutateAsync()
-      if (!data) return toast.error('No hay una tarjeta guardada para este cliente')
-      setNumero(data.numero_tarjeta)
-    } catch (err) {
-      toast.error(apiErrorMessage(err, 'No se pudo revelar el número'))
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2 pt-1">
-      {numero && <span className="font-mono text-sm tabular-nums">{formatearTarjeta(numero)}</span>}
-      <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
-        {numero ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        {numero ? 'Ocultar' : 'Ver número completo'}
-      </Button>
-    </div>
-  )
 }
 
 function DataPointReveal({ clienteId }: { clienteId: number }) {
@@ -182,26 +145,19 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
         <CardHeader><CardTitle className="text-base">Pago y evidencias</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="divide-y">
-            <Row label="Método" value={c.pago?.metodo} />
             <Row
-              label="Tarjeta"
+              label="Información de pago"
               value={
                 c.pago?.ultimos_4_digitos ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    {c.pago.marca_tarjeta && <CardBrandLogo marca={c.pago.marca_tarjeta} className="h-4 w-auto" />}
-                    **** {c.pago.ultimos_4_digitos}
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Lock className="size-3.5" /> Encriptada
                   </span>
                 ) : (
                   '—'
                 )
               }
             />
-            <Row
-              label="Vence"
-              value={c.pago?.fecha_expiracion_mes ? `${String(c.pago.fecha_expiracion_mes).padStart(2, '0')}/${c.pago.fecha_expiracion_ano}` : '—'}
-            />
           </div>
-          {c.pago?.ultimos_4_digitos && <NumeroTarjetaReveal clienteId={c.id} />}
           {c.pago?.tiene_data_point && <DataPointReveal clienteId={c.id} />}
           <div className="space-y-1.5 border-t pt-3">
             {c.evidencias.length === 0 && <p className="text-sm text-muted-foreground">Sin evidencias.</p>}

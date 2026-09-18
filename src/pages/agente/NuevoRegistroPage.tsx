@@ -42,7 +42,14 @@ export default function NuevoRegistroPage() {
   const plan = usePlanSalud(id)
   const pago = usePago(id)
   const evidencias = useEvidencias(id)
-  const firmas = useFirmas(id)
+  // clienteId numérico, no el `id` de la URL (string) — FirmaCartaCard usa
+  // useFirmas(clienteId) con ese mismo número; si acá se usara el string,
+  // sería una entrada de caché DISTINTA y nunca se enteraría cuando
+  // FirmaCartaCard invalida su propia query al actualizar el estado (bug
+  // real: la carta mostraba "Firmada" pero este mensaje seguía diciendo
+  // que faltaba firmar, porque leía una copia en caché que nunca se
+  // refrescó).
+  const firmas = useFirmas(cliente?.id)
   const finalizar = useFinalizar(id ?? 0)
   // Todos los hooks van antes de los `return` de abajo — si no, React se
   // queja (con razón: el orden de hooks no puede depender de una condición).
