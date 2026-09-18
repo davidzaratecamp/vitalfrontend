@@ -25,6 +25,10 @@ export function PagoStep({ clienteId, editable }: { clienteId: number; editable:
   // Aparte del resto del form: nunca llega prellenado (el backend no lo
   // vuelve a exponer) — vacío significa "no cambiar la tarjeta guardada".
   const [numeroTarjeta, setNumeroTarjeta] = useState('')
+  // Mismo trato que el número de tarjeta: el agente lo escribe pero no lo
+  // vuelve a ver, ni siquiera él — vacío significa "no cambiar el Data
+  // Point guardado".
+  const [dataPoint, setDataPoint] = useState('')
 
   useEffect(() => {
     if (!pago) return
@@ -54,8 +58,10 @@ export function PagoStep({ clienteId, editable }: { clienteId: number; editable:
         nombre_titular_tarjeta: form.nombre_titular_tarjeta || null,
         fecha_expiracion_mes: form.fecha_expiracion_mes ? Number(form.fecha_expiracion_mes) : null,
         fecha_expiracion_ano: form.fecha_expiracion_ano ? Number(form.fecha_expiracion_ano) : null,
+        data_point: dataPoint || undefined,
       })
       setNumeroTarjeta('')
+      setDataPoint('')
       toast.success('Información de pago guardada')
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo guardar'))
@@ -127,6 +133,25 @@ export function PagoStep({ clienteId, editable }: { clienteId: number; editable:
           />
         </div>
       </div>
+
+      <FormField
+        label="Data Point"
+        hint={pago?.tiene_data_point ? 'Ya hay uno guardado — déjalo en blanco para no cambiarlo.' : 'Solo BackOffice y Admin pueden verlo — ni tú, una vez guardado.'}
+      >
+        <Input
+          type="password"
+          autoComplete="off"
+          spellCheck={false}
+          value={dataPoint}
+          onChange={(e) => setDataPoint(e.target.value.slice(0, 300))}
+          onPaste={sinPortapapeles}
+          onCopy={sinPortapapeles}
+          onCut={sinPortapapeles}
+          onContextMenu={(e) => e.preventDefault()}
+          placeholder="••••••••••"
+          disabled={!editable}
+        />
+      </FormField>
 
       {editable && (
         <Button type="submit" disabled={setPago.isPending}>{setPago.isPending ? 'Guardando...' : 'Guardar paso'}</Button>

@@ -11,6 +11,7 @@ import type {
   Ingreso,
   InformacionPago,
   NumeroTarjetaCompleto,
+  DataPointCompleto,
   PlanSalud,
 } from '@/lib/types'
 
@@ -210,6 +211,13 @@ export const usePago = (id: string | number | undefined) =>
 export function useNumeroTarjetaCompleto(id: string | number) {
   return useMutation({
     mutationFn: async () => (await api.get<NumeroTarjetaCompleto | null>(`/clientes/${id}/pago/numero-completo`)).data,
+  })
+}
+
+/** Bajo demanda, igual que el número de tarjeta — solo BackOffice/Admin. */
+export function useDataPointCompleto(id: string | number) {
+  return useMutation({
+    mutationFn: async () => (await api.get<DataPointCompleto>(`/clientes/${id}/pago/data-point`)).data,
   })
 }
 

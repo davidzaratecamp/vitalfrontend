@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CardBrandLogo } from './CardBrandLogo'
 import { FirmaCartaCard } from './FirmaCartaCard'
-import { abrirEvidencia, useNumeroTarjetaCompleto } from '@/hooks/clientes'
+import { abrirEvidencia, useNumeroTarjetaCompleto, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { formatearTarjeta } from '@/lib/card'
 import { num } from '@/lib/analyticsFormat'
@@ -64,6 +64,41 @@ function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
       <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
         {numero ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
         {numero ? 'Ocultar' : 'Ver número completo'}
+      </Button>
+    </div>
+  )
+}
+
+function DataPointReveal({ clienteId }: { clienteId: number }) {
+  const role = useAuthStore((s) => s.user?.role)
+  const revelar = useDataPointCompleto(clienteId)
+  const [valor, setValor] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!valor) return
+    const t = setTimeout(() => setValor(null), OCULTAR_TRAS_MS)
+    return () => clearTimeout(t)
+  }, [valor])
+
+  if (role !== 'backoffice' && role !== 'admin') return null
+
+  async function toggle() {
+    if (valor) return setValor(null)
+    try {
+      const data = await revelar.mutateAsync()
+      if (!data.data_point) return toast.error('No hay un Data Point guardado para este cliente')
+      setValor(data.data_point)
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo revelar el Data Point'))
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      {valor && <span className="max-w-xs truncate text-sm">{valor}</span>}
+      <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
+        {valor ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+        {valor ? 'Ocultar' : 'Ver Data Point'}
       </Button>
     </div>
   )
@@ -167,6 +202,7 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
             />
           </div>
           {c.pago?.ultimos_4_digitos && <NumeroTarjetaReveal clienteId={c.id} />}
+          {c.pago?.tiene_data_point && <DataPointReveal clienteId={c.id} />}
           <div className="space-y-1.5 border-t pt-3">
             {c.evidencias.length === 0 && <p className="text-sm text-muted-foreground">Sin evidencias.</p>}
             {c.evidencias.map((e) => (

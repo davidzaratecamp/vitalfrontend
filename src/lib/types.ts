@@ -148,6 +148,9 @@ export interface InformacionPago {
   nombre_titular_tarjeta: string | null
   fecha_expiracion_mes: number | null
   fecha_expiracion_ano: number | null
+  /** true si ya hay un "Data Point" guardado — el valor en sí nunca viaja
+   * acá, ni siquiera al agente que lo escribió. Ver DataPointCompleto. */
+  tiene_data_point: boolean
 }
 
 /** Solo BackOffice/Admin — GET /clientes/:id/pago/numero-completo, queda
@@ -155,6 +158,11 @@ export interface InformacionPago {
 export interface NumeroTarjetaCompleto {
   numero_tarjeta: string
   marca_tarjeta: MarcaTarjeta | null
+}
+
+/** Solo BackOffice/Admin — GET /clientes/:id/pago/data-point. */
+export interface DataPointCompleto {
+  data_point: string | null
 }
 
 export interface Evidencia {
