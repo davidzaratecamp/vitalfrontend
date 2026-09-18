@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SearchSelect } from '@/components/common/SearchSelect'
 import { useReporte, descargarReporteCsv } from '@/hooks/admin'
 import { useUsuarios } from '@/hooks/usuarios'
 import { apiErrorMessage } from '@/lib/api'
@@ -67,13 +68,14 @@ export default function ReportePage() {
             {Object.entries(ESTADO_CLIENTE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={agenteId} onValueChange={(v) => { setAgenteId(v); setPage(1) }}>
-          <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Cualquier agente</SelectItem>
-            {agentes?.map((a) => <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <SearchSelect
+          className="w-56"
+          value={agenteId}
+          onValueChange={(v) => { setAgenteId(v); setPage(1) }}
+          options={(agentes ?? []).map((a) => ({ value: String(a.id), label: a.name }))}
+          placeholder="Buscar agente..."
+          allLabel="Cualquier agente"
+        />
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Desde</label>
           <Input type="date" className="h-9" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1) }} />
