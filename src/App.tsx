@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { AgentShell } from '@/components/layout/AgentShell'
 import { BackofficeShell } from '@/components/layout/BackofficeShell'
 import { AdminShell } from '@/components/layout/AdminShell'
+import { SupervisorShell } from '@/components/layout/SupervisorShell'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import LoginPage from '@/pages/LoginPage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -73,6 +74,14 @@ export default function App() {
               <Route path="/clientes/:id" element={<ClienteDetallePage />} />
               <Route path="/usuarios" element={<UsuariosPage />} />
               <Route path="/catalogos" element={<CatalogosPage />} />
+              <Route path="/ajustes" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          ) : role === 'supervisor' ? (
+            <Route element={<SupervisorShell />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/reporte" element={<ReportePage />} />
+              <Route path="/clientes/:id" element={<ClienteDetallePage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

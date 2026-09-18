@@ -6,6 +6,7 @@ import { useFirmas, useEnviarFirma, useActualizarEstadoFirma, abrirCartaFirmada 
 import { apiErrorMessage } from '@/lib/api'
 import { fmtDateTime } from '@/lib/dateFormat'
 import { ESTADO_FIRMA_LABEL, ESTADO_FIRMA_COLOR } from '@/lib/clienteConstants'
+import { useAuthStore } from '@/stores/auth'
 
 /**
  * Envío y seguimiento de la Carta CMS Vital (FirmaCloud). No depende de que
@@ -13,6 +14,10 @@ import { ESTADO_FIRMA_LABEL, ESTADO_FIRMA_COLOR } from '@/lib/clienteConstants'
  * correo, aunque falte llenar el resto del formulario.
  */
 export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number; correoCliente?: string | null }) {
+  // El supervisor es solo-lectura: ve el estado de la carta, no la envía
+  // ni la reenvía (el backend también lo bloquea, esto es solo para no
+  // mostrar un botón que igual va a fallar).
+  const soloLectura = useAuthStore((s) => s.user?.role) === 'supervisor'
   const { data: firmas, isLoading } = useFirmas(clienteId)
   const enviar = useEnviarFirma(clienteId)
   const actualizar = useActualizarEstadoFirma(clienteId)
@@ -43,7 +48,7 @@ export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number
     }
   }
 
-  const puedeEnviar = !!correoCliente
+  const puedeEnviar = !!correoCliente && !soloLectura
 
   return (
     <Card>
@@ -82,16 +87,18 @@ export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Todavía no se ha enviado la carta{!puedeEnviar && ' — hace falta un correo del cliente'}.
+            Todavía no se ha enviado la carta{!correoCliente && ' — hace falta un correo del cliente'}.
           </p>
         )}
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Button type="button" size="sm" onClick={onEnviar} disabled={!puedeEnviar || enviar.isPending}>
-            <Send className="size-3.5" />
-            {enviar.isPending ? 'Enviando...' : ultima ? 'Reenviar carta' : 'Enviar carta'}
-          </Button>
-          {ultima?.firmacloud_id && ultima.estado !== 'signed' && (
+          {!soloLectura && (
+            <Button type="button" size="sm" onClick={onEnviar} disabled={!puedeEnviar || enviar.isPending}>
+              <Send className="size-3.5" />
+              {enviar.isPending ? 'Enviando...' : ultima ? 'Reenviar carta' : 'Enviar carta'}
+            </Button>
+          )}
+          {!soloLectura && ultima?.firmacloud_id && ultima.estado !== 'signed' && (
             <Button type="button" size="sm" variant="outline" onClick={onActualizar} disabled={actualizar.isPending}>
               <RefreshCw className="size-3.5" /> Actualizar estado
             </Button>
