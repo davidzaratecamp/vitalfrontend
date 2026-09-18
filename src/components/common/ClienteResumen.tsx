@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CardBrandLogo } from './CardBrandLogo'
+import { FirmaCartaCard } from './FirmaCartaCard'
 import { abrirEvidencia, useNumeroTarjetaCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { formatearTarjeta } from '@/lib/card'
@@ -179,6 +180,8 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
           </div>
         </CardContent>
       </Card>
+
+      <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} />
     </div>
   )
 }

@@ -19,6 +19,20 @@ export const useAseguradorasPorZip = (codigoPostal?: string) =>
     enabled: !!codigoPostal && codigoPostal.length === 5,
   })
 
+/** Aseguradoras que un PRODUCTOR específico puede vender para ese código
+ * postal (BaseEstadosy CoberturasVitaldato 2026) — dos productores en el
+ * mismo estado pueden tener listas distintas, cada uno licenciado con
+ * compañías distintas. Vacío si ese productor no tiene cobertura definida
+ * en ese estado — no es error, el Paso 5 igual cae de vuelta al catálogo
+ * por ZIP o al completo. */
+export const useAseguradorasPorProductor = (productorId?: string, codigoPostal?: string) =>
+  useQuery({
+    queryKey: ['aseguradoras-por-productor', productorId, codigoPostal],
+    queryFn: async () =>
+      (await api.get<Aseguradora[]>('/catalogos/aseguradoras-por-productor', { params: { productorId, codigoPostal } })).data,
+    enabled: !!productorId && !!codigoPostal && codigoPostal.length === 5,
+  })
+
 export function useCrearAseguradora() {
   const qc = useQueryClient()
   return useMutation({

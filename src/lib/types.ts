@@ -7,7 +7,34 @@ export interface User {
   role: Role
   avatar_color: string
   is_active?: boolean
+  // Los pide la carta de firma (FirmaCloud) — cedula es obligatoria al
+  // enviar, phone es opcional. Se cargan desde Usuarios del sistema.
+  cedula?: string | null
+  phone?: string | null
   created_at?: string
+}
+
+export type EstadoFirma = 'pending' | 'viewed' | 'signed' | 'expired' | 'failed'
+
+/** Un envío de la Carta CMS Vital (ver Integracion_API_Modulo_Vital.pdf) —
+ * hay una fila por cada intento, la más reciente es "la actual". */
+export interface FirmaDocumento {
+  id: number
+  cliente_id: number
+  firmacloud_id: string | null
+  estado: EstadoFirma
+  canal: string
+  enviado_por: number
+  enviado_por_nombre?: string
+  enviado_at: string | null
+  visto_at: string | null
+  firmado_at: string | null
+  expirado_at: string | null
+  firmante_nombre: string | null
+  firmante_ip: string | null
+  firmante_dispositivo: string | null
+  created_at: string
+  updated_at: string
 }
 
 export type EstadoCliente = 'borrador' | 'pendiente_backoffice' | 'aprobado' | 'rechazado_backoffice'

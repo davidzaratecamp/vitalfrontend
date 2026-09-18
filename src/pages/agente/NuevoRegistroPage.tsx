@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
+import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -194,6 +195,8 @@ export default function NuevoRegistroPage() {
           <AccordionContent>{clienteId && <EvidenciasStep clienteId={clienteId} editable={editable} />}</AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {clienteId && <FirmaCartaCard clienteId={clienteId} correoCliente={cliente?.correo_electronico} />}
 
       {editable && clienteId && (
         <Card className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">

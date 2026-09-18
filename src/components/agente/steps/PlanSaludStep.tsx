@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormField } from '../FormField'
 import { usePlanSalud, useSetPlanSalud } from '@/hooks/clientes'
-import { useAseguradoras, useAseguradorasPorZip, useNpnProductores } from '@/hooks/catalogos'
+import { useAseguradoras, useAseguradorasPorZip, useAseguradorasPorProductor, useNpnProductores } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
 import { TIPO_METAL, TIPO_RED } from '@/lib/clienteConstants'
 
@@ -39,12 +39,16 @@ export function PlanSaludStep({
   const { data: todasLasAseguradoras } = useAseguradoras()
   const { data: porZip } = useAseguradorasPorZip(codigoPostal)
   const { data: productores } = useNpnProductores()
-  // Si el ZIP tiene cobertura definida, se limita a esas — si no, el
-  // catálogo completo (nunca se bloquea el paso por falta de datos de
-  // cobertura).
-  const aseguradoras = porZip?.length ? porZip : todasLasAseguradoras
-  const setPlan = useSetPlanSalud(clienteId ?? 0)
   const [form, setForm] = useState(empty)
+  // Dos productores en el mismo estado pueden vender aseguradoras
+  // distintas (cada uno licenciado con compañías distintas) — si ya se
+  // eligió un productor, se prioriza SU cobertura sobre la del ZIP en
+  // general; si no tiene datos para este ZIP, se cae al ZIP solo; si
+  // tampoco, al catálogo completo. Nunca se bloquea el paso por falta de
+  // datos de cobertura.
+  const { data: porProductor } = useAseguradorasPorProductor(form.npn_productor_id, codigoPostal)
+  const aseguradoras = form.npn_productor_id && porProductor?.length ? porProductor : porZip?.length ? porZip : todasLasAseguradoras
+  const setPlan = useSetPlanSalud(clienteId ?? 0)
 
   useEffect(() => {
     if (!plan) return
@@ -102,17 +106,29 @@ export function PlanSaludStep({
       {codigoPostal && (
         <p
           className={`rounded-md px-3 py-2 text-xs ${
-            porZip?.length
-              ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400'
-              : 'bg-secondary text-secondary-foreground'
+            aseguradoras === todasLasAseguradoras
+              ? 'bg-secondary text-secondary-foreground'
+              : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400'
           }`}
         >
-          {porZip?.length
-            ? `${porZip.length} aseguradora${porZip.length > 1 ? 's' : ''} disponible${porZip.length > 1 ? 's' : ''} para el código postal ${codigoPostal}.`
-            : `Sin cobertura específica definida para el código postal ${codigoPostal} — se muestra el catálogo completo.`}
+          {form.npn_productor_id && porProductor?.length
+            ? `${porProductor.length} aseguradora${porProductor.length > 1 ? 's' : ''} que ${productores?.find((p) => String(p.id) === form.npn_productor_id)?.nombre ?? 'este productor'} puede vender en ${codigoPostal}.`
+            : form.npn_productor_id && porProductor && porProductor.length === 0
+              ? `Este productor no tiene cobertura definida en ${codigoPostal} — se muestra la disponible por código postal.`
+              : porZip?.length
+                ? `${porZip.length} aseguradora${porZip.length > 1 ? 's' : ''} disponible${porZip.length > 1 ? 's' : ''} para el código postal ${codigoPostal}.`
+                : `Sin cobertura específica definida para el código postal ${codigoPostal} — se muestra el catálogo completo.`}
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Productor (NPN)">
+          <Select value={form.npn_productor_id} onValueChange={(v) => set('npn_productor_id', v)} disabled={!editable}>
+            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
+            <SelectContent>
+              {productores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </FormField>
         <FormField label="Aseguradora" required>
           <Select value={form.aseguradora_id} onValueChange={(v) => set('aseguradora_id', v)} disabled={!editable}>
             <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
@@ -147,14 +163,6 @@ export function PlanSaludStep({
         </FormField>
         <FormField label="Taxes (USD)">
           <Input type="number" min={0} step="0.01" value={form.taxes} onChange={(e) => set('taxes', e.target.value)} disabled={!editable} />
-        </FormField>
-        <FormField label="Productor (NPN)">
-          <Select value={form.npn_productor_id} onValueChange={(v) => set('npn_productor_id', v)} disabled={!editable}>
-            <SelectTrigger><SelectValue placeholder="Selecciona" /></SelectTrigger>
-            <SelectContent>
-              {productores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
-            </SelectContent>
-          </Select>
         </FormField>
       </div>
       <div className="space-y-3 rounded-md border p-3">

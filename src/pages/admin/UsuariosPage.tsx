@@ -23,11 +23,18 @@ export default function UsuariosPage() {
   const desactivar = useDesactivarUsuario()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<User | undefined>()
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'agente' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'agente', cedula: '', phone: '' })
 
   useEffect(() => {
     if (!open) return
-    setForm({ name: editing?.name ?? '', email: editing?.email ?? '', password: '', role: editing?.role ?? 'agente' })
+    setForm({
+      name: editing?.name ?? '',
+      email: editing?.email ?? '',
+      password: '',
+      role: editing?.role ?? 'agente',
+      cedula: editing?.cedula ?? '',
+      phone: editing?.phone ?? '',
+    })
   }, [open, editing])
 
   function abrir(user?: User) {
@@ -39,12 +46,18 @@ export default function UsuariosPage() {
     e.preventDefault()
     try {
       if (editing) {
-        const body: Record<string, unknown> = { name: form.name, email: form.email, role: form.role }
+        const body: Record<string, unknown> = {
+          name: form.name,
+          email: form.email,
+          role: form.role,
+          cedula: form.cedula || null,
+          phone: form.phone || null,
+        }
         if (form.password) body.password = form.password
         await actualizar.mutateAsync({ id: editing.id, ...body })
         toast.success('Usuario actualizado')
       } else {
-        await crear.mutateAsync(form)
+        await crear.mutateAsync({ ...form, cedula: form.cedula || null, phone: form.phone || null })
         toast.success('Usuario creado')
       }
       setOpen(false)
@@ -121,6 +134,16 @@ export default function UsuariosPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{ROLE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Cédula</Label>
+                <Input value={form.cedula} onChange={(e) => setForm({ ...form, cedula: e.target.value })} placeholder="Para la carta de firma" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Teléfono</Label>
+                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Opcional" />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={busy}>Cancelar</Button>

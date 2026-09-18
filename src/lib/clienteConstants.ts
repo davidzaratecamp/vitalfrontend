@@ -57,6 +57,23 @@ export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
   rechazado_backoffice: 'bg-red-500/10 text-red-600 dark:text-red-400',
 }
 
+// Estado del envío de la Carta CMS Vital (FirmaCloud) — ver hooks/firmas.ts.
+export const ESTADO_FIRMA_LABEL: Record<string, string> = {
+  pending: 'Enviada — pendiente de firma',
+  viewed: 'Vista por el cliente',
+  signed: 'Firmada',
+  expired: 'Enlace expirado (72h)',
+  failed: 'Error al enviar',
+}
+
+export const ESTADO_FIRMA_COLOR: Record<string, string> = {
+  pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  viewed: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+  signed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  expired: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  failed: 'bg-red-500/10 text-red-600 dark:text-red-400',
+}
+
 const MESES = Array.from({ length: 12 }, (_, i) => i + 1)
 export const MESES_EXPIRACION = MESES
 export function aniosExpiracion(count = 12) {
