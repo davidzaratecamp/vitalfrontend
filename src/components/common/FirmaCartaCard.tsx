@@ -83,10 +83,14 @@ export function FirmaCartaCard({
   correoCliente?: string | null
   telefonoCliente?: string | null
 }) {
-  // El supervisor es solo-lectura: ve el estado de la carta, no la envía
-  // ni la reenvía (el backend también lo bloquea, esto es solo para no
-  // mostrar un botón que igual va a fallar).
-  const soloLectura = useAuthStore((s) => s.user?.role) === 'supervisor'
+  const role = useAuthStore((s) => s.user?.role)
+  // El supervisor es solo-lectura total. BackOffice sí puede refrescar el
+  // estado y ver el PDF firmado, pero no le corresponde enviarle nada al
+  // cliente — eso es del agente (dueño del caso) o admin (el backend
+  // también lo bloquea, esto es solo para no mostrar un botón que igual
+  // va a fallar).
+  const soloLectura = role === 'supervisor'
+  const puedeEnviarCarta = role === 'agente' || role === 'admin'
   const { data: firmas, isLoading } = useFirmas(clienteId)
   const enviar = useEnviarFirma(clienteId)
   const actualizar = useActualizarEstadoFirma(clienteId)
@@ -121,7 +125,7 @@ export function FirmaCartaCard({
     }
   }
 
-  const puedeEnviar = puedeEnviarPorCanal && !soloLectura
+  const puedeEnviar = puedeEnviarPorCanal && puedeEnviarCarta
   const esTerminal = ultima?.estado === 'expired' || ultima?.estado === 'failed'
 
   return (
@@ -159,7 +163,7 @@ export function FirmaCartaCard({
                   {ultima.estado === 'expired'
                     ? 'El enlace venció a las 72 horas sin que el cliente firmara.'
                     : 'FirmaCloud reportó un error con este envío.'}{' '}
-                  {!soloLectura && 'Usa "Reenviar carta" para mandar un enlace nuevo.'}
+                  {puedeEnviarCarta && 'Usa "Reenviar carta" para mandar un enlace nuevo.'}
                 </p>
               </div>
             )}
@@ -168,7 +172,7 @@ export function FirmaCartaCard({
           <p className="text-sm text-muted-foreground">Todavía no se ha enviado la carta.</p>
         )}
 
-        {!soloLectura && (
+        {puedeEnviarCarta && (
           <div className="flex flex-wrap items-center gap-3 border-t pt-3">
             <span className="text-xs text-muted-foreground">Enviar por:</span>
             <div className="inline-flex rounded-md border p-0.5">
@@ -201,8 +205,8 @@ export function FirmaCartaCard({
           </div>
         )}
 
-        <div className={cn('flex flex-wrap gap-2', soloLectura && 'border-t pt-3')}>
-          {!soloLectura && (
+        <div className={cn('flex flex-wrap gap-2', !puedeEnviarCarta && 'border-t pt-3')}>
+          {puedeEnviarCarta && (
             <Button type="button" size="sm" onClick={onEnviar} disabled={!puedeEnviar || enviar.isPending}>
               <Send className="size-3.5" />
               {enviar.isPending ? 'Enviando...' : ultima ? 'Reenviar carta' : 'Enviar carta'}

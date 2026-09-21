@@ -130,7 +130,16 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
               <Row label="Atención primaria (PD)" value={c.plan_salud.pd} />
               <Row label="Atención de especialista (SD)" value={c.plan_salud.sd} />
               <Row label="Medicamento genérico (GD)" value={c.plan_salud.gd} />
-              <Row label="Productor (NPN)" value={c.plan_salud.npn_productor_nombre} />
+              <Row
+                label="Productor (NPN)"
+                value={
+                  c.plan_salud.npn_productor_nombre
+                    ? c.plan_salud.npn_productor_npn
+                      ? `${c.plan_salud.npn_productor_nombre} (${c.plan_salud.npn_productor_npn})`
+                      : `${c.plan_salud.npn_productor_nombre} — sin NPN cargado`
+                    : null
+                }
+              />
               <Row label="NPN" value={c.plan_salud.npn} />
               <Row label="Estado de la prima" value={c.plan_salud.estado_prima} />
               <Row label="Origen" value={c.plan_salud.version_origen === 'confirmado_backoffice' ? 'Confirmado por BackOffice' : 'Cotizado por el agente'} />

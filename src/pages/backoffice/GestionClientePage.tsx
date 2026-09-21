@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CheckCircle2, XCircle, MessageSquarePlus, History } from 'lucide-react'
@@ -31,6 +31,24 @@ export default function GestionClientePage() {
   const [motivo, setMotivo] = useState('')
   const [comentario, setComentario] = useState('')
   const [confirmRechazo, setConfirmRechazo] = useState(false)
+
+  // El agente ya cargó estos datos en el Paso 5 — no hace falta que
+  // BackOffice los vuelva a escribir, solo revisarlos. El NPN se
+  // precarga con el número real del productor elegido (npn_productor_npn);
+  // "Estado de la prima" es la única decisión que le corresponde tomar a
+  // BackOffice, esa siempre arranca en blanco.
+  const plan = cliente?.plan_salud
+  useEffect(() => {
+    if (!plan) return
+    setForm((f) => ({
+      ...f,
+      aseguradora_id: f.aseguradora_id || String(plan.aseguradora_id),
+      nombre_plan: f.nombre_plan || plan.nombre_plan,
+      deducible: f.deducible || (plan.deducible ?? ''),
+      gasto_max_bolsillo: f.gasto_max_bolsillo || (plan.gasto_max_bolsillo ?? ''),
+      npn: f.npn || plan.npn_productor_npn || plan.npn || '',
+    }))
+  }, [plan])
 
   if (isLoading || !cliente) return <Skeleton className="h-96 rounded-xl" />
 

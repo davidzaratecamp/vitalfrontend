@@ -140,6 +140,10 @@ export interface PlanSalud {
   gd: string | null
   npn_productor_id: number | null
   npn_productor_nombre?: string | null
+  /** El número de NPN real del productor elegido (npn_productores.npn) —
+   * ya venía del backend, faltaba exponerlo acá. Puede ser null si a ese
+   * productor todavía no le cargaron el número real. */
+  npn_productor_npn?: string | null
   npn: string | null
   estado_prima: string | null
   version_origen: 'cotizado_agente' | 'confirmado_backoffice'
