@@ -43,7 +43,8 @@ function DataPointReveal({ clienteId }: { clienteId: number }) {
     return () => clearTimeout(t)
   }, [valor])
 
-  if (role !== 'backoffice' && role !== 'admin') return null
+  // Solo Admin — BackOffice ya no puede revelar el Data Point.
+  if (role !== 'admin') return null
 
   async function toggle() {
     if (valor) return setValor(null)
