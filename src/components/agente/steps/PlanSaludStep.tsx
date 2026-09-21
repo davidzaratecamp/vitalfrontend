@@ -161,7 +161,7 @@ export function PlanSaludStep({
           <Input type="number" min={0} step="0.01" value={form.gasto_max_bolsillo} onChange={(e) => set('gasto_max_bolsillo', e.target.value)} disabled={!editable} />
         </FormField>
         <FormField label="Valor de la prima (USD)" required>
-          <Input type="number" min={0.01} step="0.01" value={form.valor_prima} onChange={(e) => set('valor_prima', e.target.value)} required disabled={!editable} />
+          <Input type="number" min={0} step="0.01" value={form.valor_prima} onChange={(e) => set('valor_prima', e.target.value)} required disabled={!editable} />
         </FormField>
         <FormField label="Taxes (USD)">
           <Input type="number" min={0} step="0.01" value={form.taxes} onChange={(e) => set('taxes', e.target.value)} disabled={!editable} />
