@@ -1,5 +1,5 @@
-import type { ComponentType } from 'react'
-import { FileSignature, RefreshCw, Download, Send, Eye, CircleCheckBig, Clock, CircleAlert } from 'lucide-react'
+import { useState, type ComponentType } from 'react'
+import { FileSignature, RefreshCw, Download, Send, Eye, CircleCheckBig, Clock, CircleAlert, Mail, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -46,7 +46,7 @@ function TrackerFirma({ f }: { f: FirmaDocumento }) {
         icon={Send}
         label="Enviada"
         alcanzado
-        meta={`${fmtDateTime(f.enviado_at)}${f.enviado_por_nombre ? ` · ${f.enviado_por_nombre}` : ''}`}
+        meta={`${fmtDateTime(f.enviado_at)}${f.enviado_por_nombre ? ` · ${f.enviado_por_nombre}` : ''} · ${f.canal === 'sms' ? 'SMS' : 'Correo'}`}
       />
       <Conector activo={vistaAlcanzada} />
       <NodoPaso icon={Eye} label="Vista" alcanzado={vistaAlcanzada} meta={f.visto_at ? fmtDateTime(f.visto_at) : null} />
@@ -61,12 +61,28 @@ function TrackerFirma({ f }: { f: FirmaDocumento }) {
   )
 }
 
+// EE. UU. — 10 dígitos limpios, o 11 empezando en 1 (con el código de país
+// ya incluido). Nada más se acepta para SMS, es lo único que soporta
+// FirmaCloud por este canal.
+function esTelefonoUS(telefono?: string | null) {
+  const digitos = (telefono ?? '').replace(/\D/g, '')
+  return digitos.length === 10 || (digitos.length === 11 && digitos.startsWith('1'))
+}
+
 /**
  * Envío y seguimiento de la Carta CMS Vital (FirmaCloud). No depende de que
  * los demás pasos estén completos — se puede enviar apenas el cliente tenga
- * correo, aunque falte llenar el resto del formulario.
+ * correo o teléfono, aunque falte llenar el resto del formulario.
  */
-export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number; correoCliente?: string | null }) {
+export function FirmaCartaCard({
+  clienteId,
+  correoCliente,
+  telefonoCliente,
+}: {
+  clienteId: number
+  correoCliente?: string | null
+  telefonoCliente?: string | null
+}) {
   // El supervisor es solo-lectura: ve el estado de la carta, no la envía
   // ni la reenvía (el backend también lo bloquea, esto es solo para no
   // mostrar un botón que igual va a fallar).
@@ -75,11 +91,15 @@ export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number
   const enviar = useEnviarFirma(clienteId)
   const actualizar = useActualizarEstadoFirma(clienteId)
   const ultima = firmas?.[0]
+  const [canal, setCanal] = useState<'email' | 'sms'>('email')
+
+  const telefonoValido = esTelefonoUS(telefonoCliente)
+  const puedeEnviarPorCanal = canal === 'email' ? !!correoCliente : telefonoValido
 
   async function onEnviar() {
     try {
-      await enviar.mutateAsync()
-      toast.success('Carta enviada por correo')
+      await enviar.mutateAsync(canal)
+      toast.success(`Carta enviada por ${canal === 'sms' ? 'SMS' : 'correo'}`)
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo enviar la carta'))
     }
@@ -101,7 +121,7 @@ export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number
     }
   }
 
-  const puedeEnviar = !!correoCliente && !soloLectura
+  const puedeEnviar = puedeEnviarPorCanal && !soloLectura
   const esTerminal = ultima?.estado === 'expired' || ultima?.estado === 'failed'
 
   return (
@@ -145,12 +165,43 @@ export function FirmaCartaCard({ clienteId, correoCliente }: { clienteId: number
             )}
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Todavía no se ha enviado la carta{!correoCliente && ' — hace falta un correo del cliente'}.
-          </p>
+          <p className="text-sm text-muted-foreground">Todavía no se ha enviado la carta.</p>
         )}
 
-        <div className="flex flex-wrap gap-2 border-t pt-3">
+        {!soloLectura && (
+          <div className="flex flex-wrap items-center gap-3 border-t pt-3">
+            <span className="text-xs text-muted-foreground">Enviar por:</span>
+            <div className="inline-flex rounded-md border p-0.5">
+              <button
+                type="button"
+                onClick={() => setCanal('email')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors',
+                  canal === 'email' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <Mail className="size-3.5" /> Correo
+              </button>
+              <button
+                type="button"
+                onClick={() => setCanal('sms')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors',
+                  canal === 'sms' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <MessageSquare className="size-3.5" /> SMS
+              </button>
+            </div>
+            {!puedeEnviarPorCanal && (
+              <span className="text-xs text-muted-foreground">
+                {canal === 'email' ? 'Falta el correo del cliente.' : 'El teléfono debe ser un número de EE. UU. válido (10 dígitos).'}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className={cn('flex flex-wrap gap-2', soloLectura && 'border-t pt-3')}>
           {!soloLectura && (
             <Button type="button" size="sm" onClick={onEnviar} disabled={!puedeEnviar || enviar.isPending}>
               <Send className="size-3.5" />

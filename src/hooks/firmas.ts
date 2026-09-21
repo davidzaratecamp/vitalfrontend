@@ -12,7 +12,7 @@ export const useFirmas = (clienteId: string | number | undefined) =>
 export function useEnviarFirma(clienteId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async () => (await api.post<FirmaDocumento>(`/firmas/cliente/${clienteId}/enviar`)).data,
+    mutationFn: async (canal: 'email' | 'sms') => (await api.post<FirmaDocumento>(`/firmas/cliente/${clienteId}/enviar`, { canal })).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId, 'firmas'] }),
   })
 }

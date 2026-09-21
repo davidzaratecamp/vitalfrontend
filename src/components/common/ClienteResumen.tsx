@@ -173,7 +173,7 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
         </CardContent>
       </Card>
 
-      <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} />
+      <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} telefonoCliente={c.phone_1} />
     </div>
   )
 }

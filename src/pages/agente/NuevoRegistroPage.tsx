@@ -213,7 +213,7 @@ export default function NuevoRegistroPage() {
         </AccordionItem>
       </Accordion>
 
-      {clienteId && <FirmaCartaCard clienteId={clienteId} correoCliente={cliente?.correo_electronico} />}
+      {clienteId && <FirmaCartaCard clienteId={clienteId} correoCliente={cliente?.correo_electronico} telefonoCliente={cliente?.phone_1} />}
 
       {editable && clienteId && (
         <Card className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
