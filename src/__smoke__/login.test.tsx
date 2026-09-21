@@ -16,7 +16,7 @@ test('LoginPage muestra el formulario con la marca Vital', () => {
     </QueryClientProvider>,
   )
   expect(getByText('Iniciar sesión')).toBeTruthy()
-  expect(getByLabelText('Correo')).toBeTruthy()
+  expect(getByLabelText('Usuario')).toBeTruthy()
   expect(getByLabelText('Contraseña')).toBeTruthy()
   expect(getAllByText('Vital').length).toBeGreaterThan(0)
 })

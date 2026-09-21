@@ -136,8 +136,8 @@ export default function UsuariosPage() {
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required autoFocus />
             </div>
             <div className="space-y-1.5">
-              <Label>Correo</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <Label>Usuario</Label>
+              <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Cédula o correo" required />
             </div>
             <div className="space-y-1.5">
               <Label>{editing ? 'Nueva contraseña (opcional)' : 'Contraseña'}</Label>

@@ -61,20 +61,20 @@ export default function LoginPage() {
 
           <h2 className="text-2xl font-semibold tracking-tight">Iniciar sesión</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ingresa con tu cuenta de agente, backoffice o administrador.
+            Ingresa con tu cuenta de agente, backoffice, supervisor o administrador.
           </p>
 
           <form onSubmit={onSubmit} noValidate className="mt-8 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Correo</Label>
+              <Label htmlFor="email">Usuario</Label>
               <Input
                 id="email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="tucorreo@vital.local"
+                placeholder="Cédula o correo"
               />
             </div>
             <div className="space-y-1.5">
