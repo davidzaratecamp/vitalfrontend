@@ -43,8 +43,12 @@ function DataPointReveal({ clienteId }: { clienteId: number }) {
     return () => clearTimeout(t)
   }, [valor])
 
-  // Solo Admin — BackOffice ya no puede revelar el Data Point.
-  if (role !== 'admin') return null
+  // Deshabilitado para TODOS los roles por el momento, a pedido del
+  // usuario (2026-09-21) — ni admin. El backend también lo bloquea
+  // (clientes.routes.js, GET /:id/pago/data-point). Para reactivarlo acá:
+  // volver a `if (role !== 'admin') return null`.
+  void role
+  return null
 
   async function toggle() {
     if (valor) return setValor(null)
