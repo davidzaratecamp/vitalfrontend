@@ -164,9 +164,10 @@ export default function GestionClientePage() {
         </Card>
       )}
 
-      <SoportePolizaCard clienteId={cliente.id} editable />
-
-      <SoportePolizaCard clienteId={cliente.id} editable tipo="rechazo" titulo="Soporte del rechazo" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SoportePolizaCard clienteId={cliente.id} editable />
+        <SoportePolizaCard clienteId={cliente.id} editable tipo="rechazo" titulo="Soporte del rechazo" />
+      </div>
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4" /> Historial</CardTitle></CardHeader>
