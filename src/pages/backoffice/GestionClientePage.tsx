@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { CheckCircle2, XCircle, History } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
+import { CopyableId } from '@/components/common/CopyableId'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -88,9 +89,12 @@ export default function GestionClientePage() {
         title={`${cliente.nombres} ${cliente.apellidos}`}
         description={`Enviado por ${cliente.agente?.name ?? '—'}`}
         actions={
-          <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
-            {ESTADO_CLIENTE_LABEL[cliente.estado]}
-          </span>
+          <>
+            <CopyableId id={cliente.id} />
+            <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
+              {ESTADO_CLIENTE_LABEL[cliente.estado]}
+            </span>
+          </>
         }
       />
 

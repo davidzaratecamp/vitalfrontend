@@ -353,9 +353,10 @@ export const useSoportesPoliza = (id: string | number | undefined) =>
 export function useSubirSoportePoliza(id: string | number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (files: File[]) => {
+    mutationFn: async ({ files, tipo = 'poliza' }: { files: File[]; tipo?: 'poliza' | 'rechazo' }) => {
       const form = new FormData()
       for (const f of files) form.append('archivos', f)
+      form.append('tipo', tipo)
       return (await api.post<SoportePoliza[]>(`/soportes-poliza/cliente/${id}`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })).data

@@ -203,6 +203,9 @@ export interface Evidencia {
 export interface SoportePoliza {
   id: number
   cliente_id: number
+  /** 'poliza' (soporte de póliza) o 'rechazo' (imagen de soporte al
+   * rechazar una venta) — mismo modelo, se distingue por este campo. */
+  tipo: 'poliza' | 'rechazo'
   nombre_archivo: string
   tipo_archivo: string
   tamano_bytes: number

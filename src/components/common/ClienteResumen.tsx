@@ -266,6 +266,8 @@ export function ClienteResumen({
 
       <SoportePolizaCard clienteId={c.id} editable={soportePolizaEditable} />
 
+      <SoportePolizaCard clienteId={c.id} editable={soportePolizaEditable} tipo="rechazo" titulo="Soporte del rechazo" />
+
       <ObservacionesCard clienteId={c.id} observaciones={c.observaciones} />
 
       <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} telefonoCliente={c.phone_1} />

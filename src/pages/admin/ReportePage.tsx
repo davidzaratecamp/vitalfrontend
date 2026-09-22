@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SearchSelect } from '@/components/common/SearchSelect'
+import { CopyableId } from '@/components/common/CopyableId'
 import { useReporte, descargarReporteCsv } from '@/hooks/admin'
 import { useUsuarios } from '@/hooks/usuarios'
 import { useEmpresas } from '@/hooks/catalogos'
@@ -115,6 +116,7 @@ export default function ReportePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="px-4 py-2.5 font-medium">ID</th>
                   <th className="px-4 py-2.5 font-medium">Cliente</th>
                   <th className="px-4 py-2.5 font-medium">SSN</th>
                   <th className="px-4 py-2.5 font-medium">Ubicación</th>
@@ -127,6 +129,7 @@ export default function ReportePage() {
               <tbody>
                 {data.rows.map((r) => (
                   <tr key={r.id} onClick={() => navigate(`/clientes/${r.id}`)} className="cursor-pointer border-b last:border-0 hover:bg-muted/30">
+                    <td className="px-4 py-2.5"><CopyableId id={r.id} /></td>
                     <td className="px-4 py-2.5 font-medium">{r.nombres} {r.apellidos}</td>
                     <td className="px-4 py-2.5 font-mono text-xs">{r.social}</td>
                     <td className="px-4 py-2.5">{r.ciudad}, {r.estado_us}</td>

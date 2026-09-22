@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom'
 import { History } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
+import { CopyableId } from '@/components/common/CopyableId'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCliente } from '@/hooks/clientes'
@@ -20,28 +21,16 @@ export default function ClienteDetallePage() {
         title={`${cliente.nombres} ${cliente.apellidos}`}
         description="Vista 360 — solo lectura."
         actions={
-          <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
-            {ESTADO_CLIENTE_LABEL[cliente.estado]}
-          </span>
+          <>
+            <CopyableId id={cliente.id} />
+            <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
+              {ESTADO_CLIENTE_LABEL[cliente.estado]}
+            </span>
+          </>
         }
       />
 
       <ClienteResumen c={cliente} />
-
-      {cliente.observaciones.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">Notas internas</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {cliente.observaciones.map((o) => (
-              <p key={o.id} className="text-sm">
-                <span className="font-medium">{o.autor_nombre}</span>{' '}
-                <span className="text-xs text-muted-foreground">{fmtDateTime(o.created_at)}</span>
-                <br />{o.comentario}
-              </p>
-            ))}
-          </CardContent>
-        </Card>
-      )}
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4" /> Historial de estados</CardTitle></CardHeader>

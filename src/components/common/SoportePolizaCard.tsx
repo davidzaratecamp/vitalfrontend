@@ -13,13 +13,26 @@ function fmtBytes(n: number) {
 }
 
 /**
- * "Soporte de póliza" — adjunto opcional (PDF o imagen) que BackOffice puede
- * sumar a un caso que gestiona. `editable` habilita subir/eliminar (solo en
- * la pantalla de gestión de BackOffice); en cualquier otra vista (admin,
- * supervisor vía ClienteResumen) se muestra en modo solo lectura.
+ * Adjunto opcional (PDF o imagen) que BackOffice suma a un caso —
+ * `tipo="poliza"` (soporte de póliza) o `tipo="rechazo"` (imagen de
+ * soporte al rechazar una venta, 2026-09-22): misma tabla/ruta, se filtra
+ * por tipo. `editable` habilita subir/eliminar (solo en la pantalla de
+ * gestión de BackOffice); en cualquier otra vista (admin, supervisor vía
+ * ClienteResumen) se muestra en modo solo lectura.
  */
-export function SoportePolizaCard({ clienteId, editable }: { clienteId: number; editable: boolean }) {
-  const { data: soportes, isLoading } = useSoportesPoliza(clienteId)
+export function SoportePolizaCard({
+  clienteId,
+  editable,
+  tipo = 'poliza',
+  titulo = 'Soporte de póliza',
+}: {
+  clienteId: number
+  editable: boolean
+  tipo?: 'poliza' | 'rechazo'
+  titulo?: string
+}) {
+  const { data: todos, isLoading } = useSoportesPoliza(clienteId)
+  const soportes = todos?.filter((s) => s.tipo === tipo)
   const subir = useSubirSoportePoliza(clienteId)
   const eliminar = useEliminarSoportePoliza(clienteId)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -28,7 +41,7 @@ export function SoportePolizaCard({ clienteId, editable }: { clienteId: number; 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return
     try {
-      await subir.mutateAsync(Array.from(files))
+      await subir.mutateAsync({ files: Array.from(files), tipo })
       toast.success(`${files.length} archivo(s) subido(s)`)
       if (fileRef.current) fileRef.current.value = ''
     } catch (err) {
@@ -64,7 +77,7 @@ export function SoportePolizaCard({ clienteId, editable }: { clienteId: number; 
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldCheck className="size-4" /> Soporte de póliza
+          <ShieldCheck className="size-4" /> {titulo}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -76,7 +89,7 @@ export function SoportePolizaCard({ clienteId, editable }: { clienteId: number; 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando...</p>
         ) : !soportes?.length ? (
-          <p className="text-sm text-muted-foreground">Sin soporte de póliza adjunto.</p>
+          <p className="text-sm text-muted-foreground">Sin {titulo.toLowerCase()} adjunto.</p>
         ) : (
           <div className="space-y-2">
             {soportes.map((s) => (
@@ -108,7 +121,7 @@ export function SoportePolizaCard({ clienteId, editable }: { clienteId: number; 
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => onFiles(e.target.files)}
               className="hidden"
-              id="soporte-poliza-input"
+              id={`soporte-${tipo}-input`}
             />
             <Button type="button" variant="outline" size="sm" disabled={subir.isPending} onClick={() => fileRef.current?.click()}>
               <Upload className="size-4" /> {subir.isPending ? 'Subiendo...' : 'Adjuntar soporte'}
