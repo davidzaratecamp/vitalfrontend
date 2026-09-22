@@ -245,9 +245,10 @@ export const useEvidencias = (id: string | number | undefined) =>
 export function useSubirEvidencias(id: string | number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ files, descripcion }: { files: File[]; descripcion?: string }) => {
+    mutationFn: async ({ files, categoria, descripcion }: { files: File[]; categoria: string; descripcion?: string }) => {
       const form = new FormData()
       for (const f of files) form.append('archivos', f)
+      form.append('categoria', categoria)
       if (descripcion) form.append('descripcion', descripcion)
       return (await api.post<Evidencia[]>(`/evidencias/cliente/${id}`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },

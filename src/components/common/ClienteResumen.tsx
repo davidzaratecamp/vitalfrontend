@@ -9,6 +9,7 @@ import { abrirEvidencia, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { num } from '@/lib/analyticsFormat'
 import { fmtDate } from '@/lib/dateFormat'
+import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL } from '@/lib/clienteConstants'
 import { useAuthStore } from '@/stores/auth'
 import type { ClienteDetalle } from '@/lib/types'
 
@@ -182,16 +183,38 @@ export function ClienteResumen({
             />
           </div>
           {c.pago?.tiene_data_point && <DataPointReveal clienteId={c.id} />}
-          <div className="space-y-1.5 border-t pt-3">
+          <div className="space-y-3 border-t pt-3">
             {c.evidencias.length === 0 && <p className="text-sm text-muted-foreground">Sin evidencias.</p>}
-            {c.evidencias.map((e) => (
-              <div key={e.id} className="flex items-center justify-between text-sm">
-                <span className="truncate">{e.nombre_archivo}</span>
-                <Button variant="ghost" size="icon" onClick={() => verEvidencia(e.id, e.nombre_archivo)}>
-                  <Eye className="size-4" />
-                </Button>
+            {CATEGORIA_EVIDENCIA.map((cat) => {
+              const archivos = c.evidencias.filter((e) => e.categoria === cat)
+              if (!archivos.length) return null
+              return (
+                <div key={cat} className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">{CATEGORIA_EVIDENCIA_LABEL[cat]}</p>
+                  {archivos.map((e) => (
+                    <div key={e.id} className="flex items-center justify-between text-sm">
+                      <span className="truncate">{e.nombre_archivo}</span>
+                      <Button variant="ghost" size="icon" onClick={() => verEvidencia(e.id, e.nombre_archivo)}>
+                        <Eye className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+            {c.evidencias.some((e) => !e.categoria) && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Sin categoría</p>
+                {c.evidencias.filter((e) => !e.categoria).map((e) => (
+                  <div key={e.id} className="flex items-center justify-between text-sm">
+                    <span className="truncate">{e.nombre_archivo}</span>
+                    <Button variant="ghost" size="icon" onClick={() => verEvidencia(e.id, e.nombre_archivo)}>
+                      <Eye className="size-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>

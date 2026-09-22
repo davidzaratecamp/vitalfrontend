@@ -20,7 +20,7 @@ import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, use
 import { useFirmas } from '@/hooks/firmas'
 import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
-import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
+import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, CATEGORIA_EVIDENCIA_OBLIGATORIA } from '@/lib/clienteConstants'
 
 export default function NuevoRegistroPage() {
   const { id } = useParams()
@@ -82,6 +82,11 @@ export default function NuevoRegistroPage() {
   // también lo exige (finalizar() en clientes.service.js), esto es solo
   // para no ofrecer un botón que va a fallar.
   const firmaFirmada = firmas.data?.[0]?.estado === 'signed'
+  // Póliza/Estatus migratorio/Licencia son obligatorias (Social no) — el
+  // backend también lo exige en finalizar(), esto es solo para el badge.
+  const evidenciasOk = CATEGORIA_EVIDENCIA_OBLIGATORIA.every((cat) =>
+    evidencias.data?.some((e) => e.categoria === cat)
+  )
 
   async function onFinalizar() {
     try {
@@ -206,7 +211,7 @@ export default function NuevoRegistroPage() {
           <AccordionTrigger>
             <span className="flex flex-1 items-center justify-between gap-3">
               <span className="flex items-center gap-2"><FileText className="size-4" /> 7 · Evidencias</span>
-              <StepStatus status={evidencias.data?.length ? 'completo' : 'vacio'} />
+              <StepStatus status={evidenciasOk ? 'completo' : 'vacio'} />
             </span>
           </AccordionTrigger>
           <AccordionContent>{clienteId && <EvidenciasStep clienteId={clienteId} editable={editable} />}</AccordionContent>

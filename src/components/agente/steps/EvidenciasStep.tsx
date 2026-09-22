@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Eye, FileText, Trash2, Upload } from 'lucide-react'
+import { CheckCircle2, Circle, Eye, FileText, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
 import { useEvidencias, useSubirEvidencias, useEliminarEvidencia, abrirEvidencia } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
+import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL, CATEGORIA_EVIDENCIA_OBLIGATORIA } from '@/lib/clienteConstants'
+import type { Evidencia } from '@/lib/types'
 
 function fmtBytes(n: number) {
   if (n < 1024) return `${n} B`
@@ -13,34 +14,27 @@ function fmtBytes(n: number) {
   return `${(n / 1024 / 1024).toFixed(1)} MB`
 }
 
-export function EvidenciasStep({ clienteId, editable }: { clienteId: number; editable: boolean }) {
-  const { data: evidencias, isLoading } = useEvidencias(clienteId)
-  const subir = useSubirEvidencias(clienteId)
-  const eliminar = useEliminarEvidencia(clienteId)
+function Casillero({
+  categoria,
+  archivos,
+  editable,
+  onSubir,
+  onEliminar,
+  subiendo,
+  eliminandoId,
+}: {
+  categoria: string
+  archivos: Evidencia[]
+  editable: boolean
+  onSubir: (files: FileList) => void
+  onEliminar: (id: number) => void
+  subiendo: boolean
+  eliminandoId: number | null
+}) {
   const fileRef = useRef<HTMLInputElement>(null)
-  const [descripcion, setDescripcion] = useState('')
   const [viendoId, setViendoId] = useState<number | null>(null)
-
-  async function onFiles(files: FileList | null) {
-    if (!files?.length) return
-    try {
-      await subir.mutateAsync({ files: Array.from(files), descripcion: descripcion || undefined })
-      toast.success(`${files.length} archivo(s) subido(s)`)
-      setDescripcion('')
-      if (fileRef.current) fileRef.current.value = ''
-    } catch (err) {
-      toast.error(apiErrorMessage(err, 'No se pudo subir el archivo'))
-    }
-  }
-
-  async function borrar(id: number) {
-    try {
-      await eliminar.mutateAsync(id)
-      toast.success('Evidencia eliminada')
-    } catch (err) {
-      toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
-    }
-  }
+  const obligatorio = (CATEGORIA_EVIDENCIA_OBLIGATORIA as readonly string[]).includes(categoria)
+  const completo = archivos.length > 0
 
   async function ver(id: number, nombreArchivo: string) {
     setViendoId(id)
@@ -53,56 +47,144 @@ export function EvidenciasStep({ clienteId, editable }: { clienteId: number; edi
     }
   }
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Cargando...</p>
-
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">
-        Acepta PDF, JPG y PNG. Máximo {5} archivos de {5}MB cada uno por cliente.
-      </p>
+    <Card className="space-y-3 p-4">
+      <div className="flex items-center justify-between">
+        <p className="flex items-center gap-2 text-sm font-medium">
+          {completo ? (
+            <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
+          ) : (
+            <Circle className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          {CATEGORIA_EVIDENCIA_LABEL[categoria]}
+        </p>
+        <span
+          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+            obligatorio
+              ? completo
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              : 'bg-secondary text-secondary-foreground'
+          }`}
+        >
+          {obligatorio ? (completo ? 'Completo' : 'Obligatorio — falta') : 'Opcional'}
+        </span>
+      </div>
 
-      {!!evidencias?.length && (
+      {archivos.length > 0 && (
         <div className="space-y-2">
-          {evidencias.map((e) => (
-            <Card key={e.id} className="flex items-center gap-3 p-3">
+          {archivos.map((e) => (
+            <div key={e.id} className="flex items-center gap-3 rounded-md border p-2 text-sm">
               <FileText className="size-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1 text-sm">
+              <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{e.nombre_archivo}</p>
-                <p className="text-xs text-muted-foreground">{fmtBytes(e.tamano_bytes)} · {e.tipo_archivo}</p>
+                <p className="text-xs text-muted-foreground">{fmtBytes(e.tamano_bytes)}</p>
               </div>
               <Button type="button" variant="ghost" size="icon" onClick={() => ver(e.id, e.nombre_archivo)} disabled={viendoId === e.id}>
                 <Eye className="size-4" />
               </Button>
               {editable && (
-                <Button type="button" variant="ghost" size="icon" onClick={() => borrar(e.id)} disabled={eliminar.isPending}>
+                <Button type="button" variant="ghost" size="icon" onClick={() => onEliminar(e.id)} disabled={eliminandoId === e.id}>
                   <Trash2 className="size-4 text-destructive" />
                 </Button>
               )}
-            </Card>
+            </div>
           ))}
         </div>
       )}
 
       {editable && (
-        <div className="space-y-3 rounded-lg border border-dashed p-4">
+        <div>
           <input
             ref={fileRef}
             type="file"
             multiple
             accept=".pdf,.jpg,.jpeg,.png"
-            onChange={(e) => onFiles(e.target.files)}
+            onChange={(e) => e.target.files && onSubir(e.target.files)}
             className="hidden"
-            id="evidencias-input"
           />
-          <Textarea
-            rows={2}
-            placeholder="Descripción de los archivos (opcional)"
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-          />
-          <Button type="button" variant="outline" size="sm" disabled={subir.isPending} onClick={() => fileRef.current?.click()}>
-            <Upload className="size-4" /> {subir.isPending ? 'Subiendo...' : 'Subir archivos'}
+          <Button type="button" variant="outline" size="sm" disabled={subiendo} onClick={() => fileRef.current?.click()}>
+            <Upload className="size-4" /> {subiendo ? 'Subiendo...' : archivos.length ? 'Adjuntar otro' : 'Subir archivo'}
           </Button>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+export function EvidenciasStep({ clienteId, editable }: { clienteId: number; editable: boolean }) {
+  const { data: evidencias, isLoading } = useEvidencias(clienteId)
+  const subir = useSubirEvidencias(clienteId)
+  const eliminar = useEliminarEvidencia(clienteId)
+  const [subiendoCategoria, setSubiendoCategoria] = useState<string | null>(null)
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null)
+
+  async function onSubir(categoria: string, files: FileList) {
+    setSubiendoCategoria(categoria)
+    try {
+      await subir.mutateAsync({ files: Array.from(files), categoria })
+      toast.success(`${files.length} archivo(s) subido(s) a ${CATEGORIA_EVIDENCIA_LABEL[categoria]}`)
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo subir el archivo'))
+    } finally {
+      setSubiendoCategoria(null)
+    }
+  }
+
+  async function onEliminar(id: number) {
+    setEliminandoId(id)
+    try {
+      await eliminar.mutateAsync(id)
+      toast.success('Evidencia eliminada')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
+    } finally {
+      setEliminandoId(null)
+    }
+  }
+
+  if (isLoading) return <p className="text-sm text-muted-foreground">Cargando...</p>
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">
+        Acepta PDF, JPG y PNG. Póliza, Estatus migratorio y Licencia son obligatorias para poder enviar el caso a
+        BackOffice — Social es opcional.
+      </p>
+      {CATEGORIA_EVIDENCIA.map((cat) => (
+        <Casillero
+          key={cat}
+          categoria={cat}
+          archivos={evidencias?.filter((e) => e.categoria === cat) ?? []}
+          editable={editable}
+          onSubir={(files) => onSubir(cat, files)}
+          onEliminar={onEliminar}
+          subiendo={subiendoCategoria === cat}
+          eliminandoId={eliminandoId}
+        />
+      ))}
+      {!!evidencias?.some((e) => !e.categoria) && (
+        <div className="space-y-2 rounded-lg border border-dashed p-3">
+          <p className="text-xs text-muted-foreground">Sin categoría (subidas antes de este cambio):</p>
+          {evidencias
+            .filter((e) => !e.categoria)
+            .map((e) => (
+              <div key={e.id} className="flex items-center gap-3 rounded-md border p-2 text-sm">
+                <FileText className="size-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{e.nombre_archivo}</p>
+                  <p className="text-xs text-muted-foreground">{fmtBytes(e.tamano_bytes)}</p>
+                </div>
+                <Button type="button" variant="ghost" size="icon" onClick={() => abrirEvidencia(e.id, e.nombre_archivo)}>
+                  <Eye className="size-4" />
+                </Button>
+                {editable && (
+                  <Button type="button" variant="ghost" size="icon" onClick={() => onEliminar(e.id)} disabled={eliminandoId === e.id}>
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
         </div>
       )}
     </div>

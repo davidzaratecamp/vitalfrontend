@@ -189,6 +189,9 @@ export interface Evidencia {
   cliente_id: number
   nombre_archivo: string
   tipo_archivo: string
+  /** Póliza/Estatus migratorio/Licencia/Social — ver clienteConstants.ts.
+   * Null en evidencias subidas antes de que existiera esta categorización. */
+  categoria: string | null
   tamano_bytes: number
   descripcion: string | null
   created_at: string

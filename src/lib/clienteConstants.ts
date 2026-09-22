@@ -43,6 +43,19 @@ export const METODO_PAGO_LABEL: Record<string, string> = {
   otro: 'Otro',
 }
 
+// Categorías del Paso 7 (evidencias) — cada una es su propio casillero en
+// vez de una lista plana de archivos sin etiquetar. poliza/
+// estatus_migratorio/licencia son obligatorias para poder finalizar; social
+// es la única opcional. El orden acá es el orden en que se muestran.
+export const CATEGORIA_EVIDENCIA = ['poliza', 'estatus_migratorio', 'licencia', 'social'] as const
+export const CATEGORIA_EVIDENCIA_LABEL: Record<string, string> = {
+  poliza: 'Póliza',
+  estatus_migratorio: 'Estatus migratorio',
+  licencia: 'Licencia',
+  social: 'Social',
+}
+export const CATEGORIA_EVIDENCIA_OBLIGATORIA = ['poliza', 'estatus_migratorio', 'licencia'] as const
+
 export const ESTADO_CLIENTE_LABEL: Record<string, string> = {
   borrador: 'Borrador',
   pendiente_backoffice: 'Pendiente BackOffice',
