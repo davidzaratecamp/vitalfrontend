@@ -1,11 +1,15 @@
-import { LayoutDashboard, FileSpreadsheet, Users, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, FileSpreadsheet, ShieldCheck } from 'lucide-react'
 import { Shell } from './Shell'
 import type { NavItem } from './Sidebar'
 
+// "Usuarios del sistema" se quitó del menú de admin a pedido del usuario
+// (2026-09-22) — "el admin no puede gestionar usuarios". La ruta /usuarios
+// y UsuariosPage.tsx siguen existiendo (backend también las bloquea, ver
+// usuariosSistema.routes.js) por si se reactiva más adelante; para volver a
+// mostrar el link acá: restaurar el import de `Users` y esta fila.
 const items: NavItem[] = [
   { to: '/', label: 'Panel general', icon: LayoutDashboard, end: true },
   { to: '/reporte', label: 'Reporte consolidado', icon: FileSpreadsheet },
-  { to: '/usuarios', label: 'Usuarios del sistema', icon: Users },
   { to: '/catalogos', label: 'Aseguradoras', icon: ShieldCheck },
 ]
 

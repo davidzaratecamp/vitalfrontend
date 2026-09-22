@@ -108,7 +108,7 @@ export default function GestionClientePage() {
         }
       />
 
-      <ClienteResumen c={cliente} />
+      <ClienteResumen c={cliente} soportePolizaEditable />
 
       {pendiente && (
         <Card>

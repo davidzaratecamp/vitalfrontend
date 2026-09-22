@@ -17,7 +17,6 @@ const empty = {
   deducible: '',
   gasto_max_bolsillo: '',
   valor_prima: '',
-  taxes: '',
   pd: '',
   sd: '',
   gd: '',
@@ -62,7 +61,6 @@ export function PlanSaludStep({
       deducible: plan.deducible ?? '',
       gasto_max_bolsillo: plan.gasto_max_bolsillo ?? '',
       valor_prima: plan.valor_prima,
-      taxes: plan.taxes ?? '',
       pd: plan.pd ?? '',
       sd: plan.sd ?? '',
       gd: plan.gd ?? '',
@@ -84,7 +82,6 @@ export function PlanSaludStep({
         deducible: form.deducible === '' ? null : Number(form.deducible),
         gasto_max_bolsillo: form.gasto_max_bolsillo === '' ? null : Number(form.gasto_max_bolsillo),
         valor_prima: Number(form.valor_prima),
-        taxes: form.taxes === '' ? null : Number(form.taxes),
         pd: form.pd === '' ? null : form.pd,
         sd: form.sd === '' ? null : form.sd,
         gd: form.gd === '' ? null : form.gd,
@@ -162,9 +159,6 @@ export function PlanSaludStep({
         </FormField>
         <FormField label="Valor de la prima (USD)" required>
           <Input type="number" min={0} step="0.01" value={form.valor_prima} onChange={(e) => set('valor_prima', e.target.value)} required disabled={!editable} />
-        </FormField>
-        <FormField label="Taxes (USD)">
-          <Input type="number" min={0} step="0.01" value={form.taxes} onChange={(e) => set('taxes', e.target.value)} disabled={!editable} />
         </FormField>
       </div>
       <div className="space-y-3 rounded-md border p-3">

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FirmaCartaCard } from './FirmaCartaCard'
+import { SoportePolizaCard } from './SoportePolizaCard'
 import { abrirEvidencia, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { num } from '@/lib/analyticsFormat'
@@ -72,7 +73,16 @@ function DataPointReveal({ clienteId }: { clienteId: number }) {
   )
 }
 
-export function ClienteResumen({ c }: { c: ClienteDetalle }) {
+export function ClienteResumen({
+  c,
+  soportePolizaEditable = false,
+}: {
+  c: ClienteDetalle
+  /** Solo la pantalla de gestión de BackOffice (GestionClientePage) puede
+   * subir/eliminar soporte de póliza — en cualquier otra vista (admin vía
+   * ClienteDetallePage) queda en modo solo lectura. */
+  soportePolizaEditable?: boolean
+}) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
@@ -131,7 +141,6 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
               <Row label="Deducible" value={c.plan_salud.deducible ? `$${num(Number(c.plan_salud.deducible))}` : '—'} />
               <Row label="Gasto máx. bolsillo" value={c.plan_salud.gasto_max_bolsillo ? `$${num(Number(c.plan_salud.gasto_max_bolsillo))}` : '—'} />
               <Row label="Prima" value={`$${num(Number(c.plan_salud.valor_prima))}`} />
-              <Row label="Taxes" value={c.plan_salud.taxes ? `$${num(Number(c.plan_salud.taxes))}` : '—'} />
               <Row label="Atención primaria (PD)" value={c.plan_salud.pd} />
               <Row label="Atención de especialista (SD)" value={c.plan_salud.sd} />
               <Row label="Medicamento genérico (GD)" value={c.plan_salud.gd} />
@@ -186,6 +195,8 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
           </div>
         </CardContent>
       </Card>
+
+      <SoportePolizaCard clienteId={c.id} editable={soportePolizaEditable} />
 
       <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} telefonoCliente={c.phone_1} />
     </div>

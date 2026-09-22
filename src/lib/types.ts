@@ -131,6 +131,9 @@ export interface PlanSalud {
   deducible: string | null
   gasto_max_bolsillo: string | null
   valor_prima: string
+  /** Retirado del formulario y del resumen (2026-09-22) — ya nadie lo
+   * digita ni lo ve. Puede seguir llegando en registros viejos, ningún
+   * componente lo lee. */
   taxes: string | null
   // Lo que el agente ve en la pantalla "Usted paga" de la otra plataforma —
   // texto libre (ej. "Sin cargo por visita desde el día 1", "50% coaseguro
@@ -186,6 +189,18 @@ export interface Evidencia {
   tipo_archivo: string
   tamano_bytes: number
   descripcion: string | null
+  created_at: string
+}
+
+/** Adjunto opcional (PDF o imagen) que BackOffice suma a un caso — no es
+ * del agente, tabla y ruta separadas de Evidencia. */
+export interface SoportePoliza {
+  id: number
+  cliente_id: number
+  nombre_archivo: string
+  tipo_archivo: string
+  tamano_bytes: number
+  subido_por: number
   created_at: string
 }
 

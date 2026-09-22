@@ -25,7 +25,8 @@ const GestionClientePage = lazy(() => import('@/pages/backoffice/GestionClienteP
 const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'))
 const ReportePage = lazy(() => import('@/pages/admin/ReportePage'))
 const ClienteDetallePage = lazy(() => import('@/pages/admin/ClienteDetallePage'))
-const UsuariosPage = lazy(() => import('@/pages/admin/UsuariosPage'))
+// UsuariosPage: import lazy quitado junto con su ruta (ver comentario más
+// abajo) — el archivo sigue existiendo.
 const CatalogosPage = lazy(() => import('@/pages/admin/CatalogosPage'))
 
 function PageFallback() {
@@ -72,7 +73,12 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/reporte" element={<ReportePage />} />
               <Route path="/clientes/:id" element={<ClienteDetallePage />} />
-              <Route path="/usuarios" element={<UsuariosPage />} />
+              {/* /usuarios (UsuariosPage) quitada del admin (2026-09-22) —
+                  "el admin no puede gestionar usuarios". El archivo sigue
+                  en pages/admin/UsuariosPage.tsx y el backend también la
+                  bloquea (usuariosSistema.routes.js); para reactivar,
+                  restaurar esta ruta + el import lazy de abajo + el link en
+                  AdminShell.tsx. */}
               <Route path="/catalogos" element={<CatalogosPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

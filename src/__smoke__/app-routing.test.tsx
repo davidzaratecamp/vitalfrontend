@@ -51,5 +51,6 @@ test('rol admin monta AdminShell con su navegación', async () => {
   const { findAllByText } = renderApp()
   expect((await findAllByText('Panel general')).length).toBeGreaterThan(0)
   expect((await findAllByText('Reporte consolidado')).length).toBeGreaterThan(0)
-  expect((await findAllByText('Usuarios del sistema')).length).toBeGreaterThan(0)
+  // "Usuarios del sistema" se quitó del menú de admin (2026-09-22) — ver
+  // comentario en AdminShell.tsx.
 })

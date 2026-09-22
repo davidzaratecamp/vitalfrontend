@@ -13,6 +13,7 @@ import type {
   NumeroTarjetaCompleto,
   DataPointCompleto,
   PlanSalud,
+  SoportePoliza,
 } from '@/lib/types'
 
 export interface ClienteFilters {
@@ -290,9 +291,15 @@ export function evidenciaUrl(evidenciaId: number) {
  * devuelva null (perdemos la referencia con la que íbamos a rellenarla).
  */
 export async function abrirEvidencia(evidenciaId: number, nombreArchivo = 'evidencia') {
+  return abrirArchivo(evidenciaUrl(evidenciaId), nombreArchivo)
+}
+
+/** Misma lógica de visor que `abrirEvidencia`, generalizada para cualquier
+ * ruta autenticada que sirva un archivo (evidencias, soporte de póliza). */
+export async function abrirArchivo(rutaArchivo: string, nombreArchivo = 'archivo') {
   const ventana = window.open('', '_blank')
   try {
-    const res = await api.get(evidenciaUrl(evidenciaId), { responseType: 'blob' })
+    const res = await api.get(rutaArchivo, { responseType: 'blob' })
     const blob = res.data as Blob
     const url = URL.createObjectURL(blob)
     const esImagen = blob.type.startsWith('image/')
@@ -328,6 +335,48 @@ export async function abrirEvidencia(evidenciaId: number, nombreArchivo = 'evide
     ventana?.close()
     throw err
   }
+}
+
+/* ───────────────────────── Soporte de póliza (BackOffice) ─────────────────────────
+ * Adjunto opcional (PDF o imagen) que BackOffice puede sumar a un caso —
+ * tabla y ruta separadas de las evidencias del Paso 7 del agente porque el
+ * dueño y el permiso son distintos (ver soportesPoliza.routes.js). */
+
+export const useSoportesPoliza = (id: string | number | undefined) =>
+  useQuery({
+    queryKey: ['clientes', id, 'soportes-poliza'],
+    queryFn: async () => (await api.get<SoportePoliza[]>(`/soportes-poliza/cliente/${id}`)).data,
+    enabled: id != null,
+  })
+
+export function useSubirSoportePoliza(id: string | number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (files: File[]) => {
+      const form = new FormData()
+      for (const f of files) form.append('archivos', f)
+      return (await api.post<SoportePoliza[]>(`/soportes-poliza/cliente/${id}`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })).data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', id, 'soportes-poliza'] }),
+  })
+}
+
+export function useEliminarSoportePoliza(id: string | number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (soporteId: number) => (await api.delete(`/soportes-poliza/${soporteId}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', id, 'soportes-poliza'] }),
+  })
+}
+
+export function soportePolizaUrl(soporteId: number) {
+  return `/soportes-poliza/${soporteId}/archivo`
+}
+
+export async function abrirSoportePoliza(soporteId: number, nombreArchivo = 'soporte de póliza') {
+  return abrirArchivo(soportePolizaUrl(soporteId), nombreArchivo)
 }
 
 /* ───────────────────────── Finalizar / observaciones ───────────────────────── */
