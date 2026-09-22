@@ -87,6 +87,7 @@ export interface Cliente {
   phone_1: string
   phone_2: string | null
   whatsapp: string | null
+  horario_contactabilidad: string | null
   contacto_emergencia_nombre: string | null
   contacto_emergencia_telefono: string | null
   contacto_emergencia_email: string | null

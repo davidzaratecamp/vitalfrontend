@@ -32,6 +32,7 @@ const empty = {
   phone_1: '',
   phone_2: '',
   whatsapp: '',
+  horario_contactabilidad: '',
   contacto_emergencia_nombre: '',
   contacto_emergencia_telefono: '',
   contacto_emergencia_email: '',
@@ -97,6 +98,7 @@ export function TitularStep({
       phone_1: cliente.phone_1,
       phone_2: cliente.phone_2 ?? '',
       whatsapp: cliente.whatsapp ?? '',
+      horario_contactabilidad: cliente.horario_contactabilidad ?? '',
       contacto_emergencia_nombre: cliente.contacto_emergencia_nombre ?? '',
       contacto_emergencia_telefono: cliente.contacto_emergencia_telefono ?? '',
       contacto_emergencia_email: cliente.contacto_emergencia_email ?? '',
@@ -137,6 +139,7 @@ export function TitularStep({
       if (!body.tipo_vivienda) body.tipo_vivienda = null
       if (!body.phone_2) body.phone_2 = null
       if (!body.whatsapp) body.whatsapp = null
+      if (!body.horario_contactabilidad) body.horario_contactabilidad = null
       if (!body.contacto_emergencia_nombre) body.contacto_emergencia_nombre = null
       if (!body.contacto_emergencia_telefono) body.contacto_emergencia_telefono = null
       if (!body.contacto_emergencia_email) body.contacto_emergencia_email = null
@@ -247,6 +250,14 @@ export function TitularStep({
         </FormField>
         <FormField label="WhatsApp">
           <Input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} disabled={!editable} />
+        </FormField>
+        <FormField label="Horario de contactabilidad" className="sm:col-span-2 space-y-1.5">
+          <Input
+            value={form.horario_contactabilidad}
+            onChange={(e) => set('horario_contactabilidad', e.target.value)}
+            placeholder="Ej. Lunes a viernes, 8am-5pm"
+            disabled={!editable}
+          />
         </FormField>
       </div>
 

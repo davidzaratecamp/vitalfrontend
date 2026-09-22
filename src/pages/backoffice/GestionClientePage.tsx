@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { CheckCircle2, XCircle, MessageSquarePlus, History } from 'lucide-react'
+import { CheckCircle2, XCircle, History } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCliente } from '@/hooks/clientes'
 import { useAseguradoras } from '@/hooks/catalogos'
-import { useCompletar, useRechazar, useObservacionBackoffice, useHistorialBackoffice } from '@/hooks/backoffice'
+import { useCompletar, useRechazar, useHistorialBackoffice } from '@/hooks/backoffice'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, ESTADO_PRIMA } from '@/lib/clienteConstants'
 import { fmtDateTime } from '@/lib/dateFormat'
@@ -25,11 +25,9 @@ export default function GestionClientePage() {
   const { data: historial } = useHistorialBackoffice(id)
   const completar = useCompletar(id ?? 0)
   const rechazar = useRechazar(id ?? 0)
-  const nota = useObservacionBackoffice(id ?? 0)
 
   const [form, setForm] = useState({ aseguradora_id: '', nombre_plan: '', deducible: '', gasto_max_bolsillo: '', npn: '', estado_prima: '' })
   const [motivo, setMotivo] = useState('')
-  const [comentario, setComentario] = useState('')
   const [confirmRechazo, setConfirmRechazo] = useState(false)
 
   // El agente ya cargó estos datos en el Paso 5 — no hace falta que
@@ -79,18 +77,6 @@ export default function GestionClientePage() {
       toast.success('Registro rechazado, vuelve al agente')
       setConfirmRechazo(false)
       navigate('/')
-    } catch (err) {
-      toast.error(apiErrorMessage(err))
-    }
-  }
-
-  async function onNota(e: React.FormEvent) {
-    e.preventDefault()
-    if (!comentario.trim()) return
-    try {
-      await nota.mutateAsync(comentario)
-      setComentario('')
-      toast.success('Nota agregada')
     } catch (err) {
       toast.error(apiErrorMessage(err))
     }
@@ -172,27 +158,6 @@ export default function GestionClientePage() {
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><MessageSquarePlus className="size-4" /> Nota interna</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <form onSubmit={onNota} noValidate className="flex gap-2">
-            <Input value={comentario} onChange={(e) => setComentario(e.target.value)} placeholder="Escribe una nota visible para BackOffice/Admin..." />
-            <Button type="submit" disabled={nota.isPending}>Agregar</Button>
-          </form>
-          {cliente.observaciones.length > 0 && (
-            <div className="space-y-2 border-t pt-3">
-              {cliente.observaciones.map((o) => (
-                <p key={o.id} className="text-sm">
-                  <span className="font-medium">{o.autor_nombre}</span>{' '}
-                  <span className="text-xs text-muted-foreground">{fmtDateTime(o.created_at)}</span>
-                  <br />{o.comentario}
-                </p>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4" /> Historial</CardTitle></CardHeader>

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
+import { ObservacionesCard } from '@/components/common/ObservacionesCard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -127,6 +128,8 @@ export default function NuevoRegistroPage() {
         </Card>
       )}
 
+      {clienteId && <ObservacionesCard clienteId={clienteId} observaciones={cliente?.observaciones ?? []} />}
+
       <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
         <AccordionItem value="titular">
           <AccordionTrigger>
@@ -212,7 +215,18 @@ export default function NuevoRegistroPage() {
             {clienteId && <PagoStep clienteId={clienteId} editable={editable} primaEsCero={primaEsCero} />}
           </AccordionContent>
         </AccordionItem>
+      </Accordion>
 
+      {/* La carta de firma va ANTES de las evidencias (2026-09-22, a pedido
+          del usuario) — antes quedaba al final de la página, después de
+          los 7 pasos, así que el agente terminaba subiendo documentos de
+          ventas que ni siquiera se habían firmado todavía. Enviarla/
+          revisarla acá, justo después del Plan y el Pago (de donde sale el
+          contenido de la carta), deja que se envíe temprano y se monitoree
+          en tiempo real mientras se reúnen los documentos por separado. */}
+      {clienteId && <FirmaCartaCard clienteId={clienteId} correoCliente={cliente?.correo_electronico} telefonoCliente={cliente?.phone_1} />}
+
+      <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
         <AccordionItem value="evidencias" disabled={!clienteId}>
           <AccordionTrigger>
             <span className="flex flex-1 items-center justify-between gap-3">
@@ -223,8 +237,6 @@ export default function NuevoRegistroPage() {
           <AccordionContent>{clienteId && <EvidenciasStep clienteId={clienteId} editable={editable} />}</AccordionContent>
         </AccordionItem>
       </Accordion>
-
-      {clienteId && <FirmaCartaCard clienteId={clienteId} correoCliente={cliente?.correo_electronico} telefonoCliente={cliente?.phone_1} />}
 
       {editable && clienteId && (
         <Card className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">

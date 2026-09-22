@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FirmaCartaCard } from './FirmaCartaCard'
 import { SoportePolizaCard } from './SoportePolizaCard'
+import { ObservacionesCard } from './ObservacionesCard'
 import { abrirEvidencia, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { num } from '@/lib/analyticsFormat'
@@ -96,7 +97,10 @@ export function ClienteResumen({
           <Row label="Dirección" value={`${c.direccion}, ${c.ciudad}, ${c.estado_us} ${c.codigo_postal}`} />
           <Row label="Condado" value={c.condado} />
           <Row label="Correo" value={c.correo_electronico} />
-          <Row label="Teléfonos" value={[c.phone_1, c.phone_2, c.whatsapp].filter(Boolean).join(' · ')} />
+          <Row label="Teléfono principal" value={c.phone_1} />
+          {c.phone_2 && <Row label="Teléfono adicional" value={c.phone_2} />}
+          {c.whatsapp && <Row label="WhatsApp" value={c.whatsapp} />}
+          <Row label="Horario de contactabilidad" value={c.horario_contactabilidad} />
           <Row label="Origen de venta" value={c.origen_venta} />
           <Row label="Agente" value={c.agente?.name} />
         </CardContent>
@@ -109,8 +113,22 @@ export function ClienteResumen({
             {c.dependientes.length === 0 && <p className="text-sm text-muted-foreground">Sin cónyuge ni dependientes.</p>}
             {c.dependientes.map((d) => (
               <div key={d.id} className="rounded-md border p-2.5 text-sm">
-                <p className="font-medium">{d.nombres} {d.apellidos} <span className="font-normal text-muted-foreground">· {d.parentesco}</span></p>
-                <p className="text-xs text-muted-foreground">{d.sexo} · nace {fmtDate(d.fecha_nacimiento)} · {d.estatus_migratorio}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">{d.nombres} {d.apellidos} <span className="font-normal text-muted-foreground">· {d.parentesco}</span></p>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                      d.solicita_cobertura
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-secondary text-secondary-foreground'
+                    }`}
+                  >
+                    {d.solicita_cobertura ? 'Enrolado en la póliza' : 'No enrolado'}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {d.sexo} · nace {fmtDate(d.fecha_nacimiento)} · {d.estatus_migratorio}
+                  {d.medicare_medicaid && ' · Medicare/Medicaid'}
+                </p>
               </div>
             ))}
           </CardContent>
@@ -220,6 +238,8 @@ export function ClienteResumen({
       </Card>
 
       <SoportePolizaCard clienteId={c.id} editable={soportePolizaEditable} />
+
+      <ObservacionesCard clienteId={c.id} observaciones={c.observaciones} />
 
       <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} telefonoCliente={c.phone_1} />
     </div>
