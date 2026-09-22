@@ -116,7 +116,9 @@ export interface Ingreso {
   cliente_id: number
   dependiente_id: number | null
   tipo_declaracion: 'W2' | '1099'
-  ingresos_semanales: string
+  // El agente ya digita el anual directo (2026-09-22), no se calcula de
+  // semanal*52 — semanal queda opcional/histórico, ya no se pide.
+  ingresos_semanales: string | null
   ingresos_anuales: string
 }
 

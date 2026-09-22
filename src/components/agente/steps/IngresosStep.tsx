@@ -23,18 +23,18 @@ function PersonaIngreso({
   label: string
   ingreso?: Ingreso
   editable: boolean
-  onSave: (v: { tiene_ingresos: boolean; tipo_declaracion: string; ingresos_semanales: number }) => void
+  onSave: (v: { tiene_ingresos: boolean; tipo_declaracion: string; ingresos_anuales: number }) => void
   saving: boolean
   obligatorio?: boolean
 }) {
   const [tiene, setTiene] = useState(!!ingreso || !!obligatorio)
   const [tipo, setTipo] = useState<string>(ingreso?.tipo_declaracion ?? 'W2')
-  const [semanal, setSemanal] = useState(ingreso?.ingresos_semanales ?? '')
+  const [anual, setAnual] = useState(ingreso?.ingresos_anuales ?? '')
 
   useEffect(() => {
     setTiene(!!ingreso || !!obligatorio)
     setTipo(ingreso?.tipo_declaracion ?? 'W2')
-    setSemanal(ingreso?.ingresos_semanales ?? '')
+    setAnual(ingreso?.ingresos_anuales ?? '')
   }, [ingreso, obligatorio])
 
   return (
@@ -49,19 +49,16 @@ function PersonaIngreso({
         )}
       </div>
       {tiene && (
-        <div className="grid gap-3 sm:grid-cols-3 sm:items-end">
+        <div className="grid gap-3 sm:grid-cols-2 sm:items-end">
           <FormField label="Tipo de declaración" required>
             <Select value={tipo} onValueChange={setTipo} disabled={!editable}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{TIPO_DECLARACION.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </FormField>
-          <FormField label="Ingresos semanales (USD)" required>
-            <Input type="number" min={0} step="0.01" value={semanal} onChange={(e) => setSemanal(e.target.value)} disabled={!editable} required />
+          <FormField label="Ingreso anual (USD)" required>
+            <Input type="number" min={0} step="0.01" value={anual} onChange={(e) => setAnual(e.target.value)} disabled={!editable} required />
           </FormField>
-          <p className="text-xs text-muted-foreground sm:pb-2.5">
-            Anual: <span className="font-medium text-foreground">${num(Number(semanal || 0) * 52)}</span>
-          </p>
         </div>
       )}
       {editable && (
@@ -70,7 +67,7 @@ function PersonaIngreso({
           size="sm"
           variant="outline"
           disabled={saving}
-          onClick={() => onSave({ tiene_ingresos: tiene, tipo_declaracion: tipo, ingresos_semanales: Number(semanal || 0) })}
+          onClick={() => onSave({ tiene_ingresos: tiene, tipo_declaracion: tipo, ingresos_anuales: Number(anual || 0) })}
         >
           {saving ? 'Guardando...' : 'Guardar'}
         </Button>
@@ -88,7 +85,7 @@ export function IngresosStep({ clienteId, editable }: { clienteId: number; edita
   const ingresoTitular = ingresos?.rows.find((r) => r.dependiente_id == null)
   const ingresoPorDep = new Map((ingresos?.rows ?? []).filter((r) => r.dependiente_id != null).map((r) => [r.dependiente_id, r]))
 
-  async function guardarTitular(v: { tiene_ingresos: boolean; tipo_declaracion: string; ingresos_semanales: number }) {
+  async function guardarTitular(v: { tiene_ingresos: boolean; tipo_declaracion: string; ingresos_anuales: number }) {
     try {
       await setTitular.mutateAsync(v)
       toast.success('Ingresos del titular guardados')
@@ -97,7 +94,7 @@ export function IngresosStep({ clienteId, editable }: { clienteId: number; edita
     }
   }
 
-  async function guardarDep(depId: number, v: { tiene_ingresos: boolean; tipo_declaracion: string; ingresos_semanales: number }) {
+  async function guardarDep(depId: number, v: { tiene_ingresos: boolean; tipo_declaracion: string; ingresos_anuales: number }) {
     try {
       await setDep.mutateAsync({ depId, body: v })
       toast.success('Ingresos guardados')

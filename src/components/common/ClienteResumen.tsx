@@ -122,7 +122,7 @@ export function ClienteResumen({
               <Row
                 key={i.id}
                 label={i.dependiente_id == null ? 'Titular' : `Dependiente #${i.dependiente_id}`}
-                value={`$${num(Number(i.ingresos_semanales))}/sem · $${num(Number(i.ingresos_anuales))}/año (${i.tipo_declaracion})`}
+                value={`$${num(Number(i.ingresos_anuales))}/año (${i.tipo_declaracion})`}
               />
             ))}
             <Row label="Total familia (anual)" value={`$${num(c.ingresos_totales_familia)}`} />
