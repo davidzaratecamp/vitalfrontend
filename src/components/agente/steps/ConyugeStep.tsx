@@ -96,7 +96,8 @@ export function ConyugeStep({ clienteId, editable }: { clienteId: number; editab
               </Select>
             </FormField>
             <FormField label="Fecha de nacimiento" required>
-              <Input type="date" value={form.fecha_nacimiento} onChange={(e) => set('fecha_nacimiento', e.target.value)} required disabled={!editable} />
+              {/* lang="en-US" fuerza mes/día/año en el picker nativo. */}
+              <Input type="date" lang="en-US" value={form.fecha_nacimiento} onChange={(e) => set('fecha_nacimiento', e.target.value)} required disabled={!editable} />
             </FormField>
             <FormField label="Social Security Number">
               <Input value={form.social} onChange={(e) => set('social', e.target.value.replace(/\D/g, '').slice(0, 9))} disabled={!editable} />

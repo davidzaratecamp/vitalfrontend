@@ -88,11 +88,15 @@ export function ClientesEstadoTable({
         </Select>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Desde</label>
-          <Input type="date" className="h-9 w-36" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          {/* lang="en-US": el picker nativo de <input type=date> se muestra en
+              el idioma de la página (día/mes/año con lang="es" del sitio) —
+              esto lo fuerza a mes/día/año en Chrome/Edge. Firefox no respeta
+              `lang` acá, solo el locale del SO. */}
+          <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => setDesde(e.target.value)} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Hasta</label>
-          <Input type="date" className="h-9 w-36" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          <Input type="date" lang="en-US" className="h-9 w-36" value={hasta} onChange={(e) => setHasta(e.target.value)} />
         </div>
         {hayFiltros && (
           <Button

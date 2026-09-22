@@ -95,11 +95,13 @@ export default function ReportePage() {
         )}
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Desde</label>
-          <Input type="date" className="h-9" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1) }} />
+          {/* lang="en-US" fuerza mes/día/año en el picker nativo (Chrome/Edge
+              lo muestran en el idioma de la página, "es", si no se indica). */}
+          <Input type="date" lang="en-US" className="h-9" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1) }} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Hasta</label>
-          <Input type="date" className="h-9" value={to} onChange={(e) => { setTo(e.target.value); setPage(1) }} />
+          <Input type="date" lang="en-US" className="h-9" value={to} onChange={(e) => { setTo(e.target.value); setPage(1) }} />
         </div>
       </div>
 

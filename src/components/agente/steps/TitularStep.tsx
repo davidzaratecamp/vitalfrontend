@@ -195,7 +195,8 @@ export function TitularStep({
           </Select>
         </FormField>
         <FormField label="Fecha de nacimiento" required>
-          <Input type="date" value={form.fecha_nacimiento} onChange={(e) => set('fecha_nacimiento', e.target.value)} required disabled={!editable} />
+          {/* lang="en-US" fuerza mes/día/año en el picker nativo. */}
+          <Input type="date" lang="en-US" value={form.fecha_nacimiento} onChange={(e) => set('fecha_nacimiento', e.target.value)} required disabled={!editable} />
           {edad != null && <p className="mt-1 text-xs text-muted-foreground">Edad: {edad} años</p>}
         </FormField>
         <FormField label="Social Security Number (SSN)" required>
