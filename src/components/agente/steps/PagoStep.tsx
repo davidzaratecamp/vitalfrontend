@@ -18,7 +18,17 @@ const anios = aniosExpiracion()
 // el número salga de ahí por otro camino que no sea guardarlo cifrado.
 const sinPortapapeles = (e: React.ClipboardEvent) => e.preventDefault()
 
-export function PagoStep({ clienteId, editable }: { clienteId: number; editable: boolean }) {
+export function PagoStep({
+  clienteId,
+  editable,
+  primaEsCero,
+}: {
+  clienteId: number
+  editable: boolean
+  /** Prima del plan cotizado es $0 — este paso deja de ser obligatorio
+   * para finalizar (el backend aplica la misma regla). */
+  primaEsCero?: boolean
+}) {
   const { data: pago, isLoading } = usePago(clienteId)
   const setPago = useSetPago(clienteId)
   const [form, setForm] = useState(empty)
@@ -72,6 +82,12 @@ export function PagoStep({ clienteId, editable }: { clienteId: number; editable:
 
   return (
     <form onSubmit={submit} noValidate className="space-y-4">
+      {primaEsCero && (
+        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+          La prima de este plan es $0 — este paso es opcional, no hace falta llenarlo para finalizar. Puedes
+          completarlo igual si el cliente quiere dejar un método de pago guardado.
+        </p>
+      )}
       <p className="flex items-start gap-2 rounded-md bg-accent-soft/60 bg-accent/10 px-3 py-2 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-accent" />
         El número queda cifrado — nadie lo vuelve a ver en texto plano acá, ni siquiera tú una vez guardado. Solo BackOffice y Admin pueden revelarlo completo, y cada vez que lo hacen queda registrado.

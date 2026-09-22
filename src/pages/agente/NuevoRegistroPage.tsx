@@ -87,6 +87,10 @@ export default function NuevoRegistroPage() {
   const evidenciasOk = CATEGORIA_EVIDENCIA_OBLIGATORIA.every((cat) =>
     evidencias.data?.some((e) => e.categoria === cat)
   )
+  // Con prima $0 (plan totalmente subsidiado) no hay cobro que gestionar —
+  // el Paso 6 deja de ser obligatorio para poder finalizar (2026-09-22). El
+  // backend aplica la misma regla en finalizar().
+  const primaEsCero = plan.data != null && Number(plan.data.valor_prima) === 0
 
   async function onFinalizar() {
     try {
@@ -201,10 +205,12 @@ export default function NuevoRegistroPage() {
           <AccordionTrigger>
             <span className="flex flex-1 items-center justify-between gap-3">
               <span className="flex items-center gap-2"><CreditCard className="size-4" /> 6 · Información de pago</span>
-              <StepStatus status={pago.data ? 'completo' : 'vacio'} />
+              <StepStatus status={pago.data || primaEsCero ? 'completo' : 'vacio'} />
             </span>
           </AccordionTrigger>
-          <AccordionContent>{clienteId && <PagoStep clienteId={clienteId} editable={editable} />}</AccordionContent>
+          <AccordionContent>
+            {clienteId && <PagoStep clienteId={clienteId} editable={editable} primaEsCero={primaEsCero} />}
+          </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="evidencias" disabled={!clienteId}>
