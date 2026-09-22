@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, History } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
+import { SoportePolizaCard } from '@/components/common/SoportePolizaCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -98,7 +99,7 @@ export default function GestionClientePage() {
         }
       />
 
-      <ClienteResumen c={cliente} soportePolizaEditable />
+      <ClienteResumen c={cliente} />
 
       {pendiente && (
         <Card>
@@ -162,6 +163,10 @@ export default function GestionClientePage() {
           </CardContent>
         </Card>
       )}
+
+      <SoportePolizaCard clienteId={cliente.id} editable />
+
+      <SoportePolizaCard clienteId={cliente.id} editable tipo="rechazo" titulo="Soporte del rechazo" />
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4" /> Historial</CardTitle></CardHeader>

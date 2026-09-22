@@ -3,6 +3,7 @@ import { History } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
+import { SoportePolizaCard } from '@/components/common/SoportePolizaCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCliente } from '@/hooks/clientes'
@@ -31,6 +32,10 @@ export default function ClienteDetallePage() {
       />
 
       <ClienteResumen c={cliente} />
+
+      <SoportePolizaCard clienteId={cliente.id} editable={false} />
+
+      <SoportePolizaCard clienteId={cliente.id} editable={false} tipo="rechazo" titulo="Soporte del rechazo" />
 
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4" /> Historial de estados</CardTitle></CardHeader>

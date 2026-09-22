@@ -4,7 +4,6 @@ import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FirmaCartaCard } from './FirmaCartaCard'
-import { SoportePolizaCard } from './SoportePolizaCard'
 import { ObservacionesCard } from './ObservacionesCard'
 import { abrirEvidencia, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
@@ -75,16 +74,7 @@ function DataPointReveal({ clienteId }: { clienteId: number }) {
   )
 }
 
-export function ClienteResumen({
-  c,
-  soportePolizaEditable = false,
-}: {
-  c: ClienteDetalle
-  /** Solo la pantalla de gestión de BackOffice (GestionClientePage) puede
-   * subir/eliminar soporte de póliza — en cualquier otra vista (admin vía
-   * ClienteDetallePage) queda en modo solo lectura. */
-  soportePolizaEditable?: boolean
-}) {
+export function ClienteResumen({ c }: { c: ClienteDetalle }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
@@ -263,10 +253,6 @@ export function ClienteResumen({
           </div>
         </CardContent>
       </Card>
-
-      <SoportePolizaCard clienteId={c.id} editable={soportePolizaEditable} />
-
-      <SoportePolizaCard clienteId={c.id} editable={soportePolizaEditable} tipo="rechazo" titulo="Soporte del rechazo" />
 
       <ObservacionesCard clienteId={c.id} observaciones={c.observaciones} />
 
