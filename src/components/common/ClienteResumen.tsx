@@ -10,7 +10,7 @@ import { abrirEvidencia, useDataPointCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { num } from '@/lib/analyticsFormat'
 import { fmtDate } from '@/lib/dateFormat'
-import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL } from '@/lib/clienteConstants'
+import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL, METODO_PAGO_LABEL } from '@/lib/clienteConstants'
 import { useAuthStore } from '@/stores/auth'
 import type { ClienteDetalle } from '@/lib/types'
 
@@ -88,7 +88,20 @@ export function ClienteResumen({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
-        <CardHeader><CardTitle className="text-base">Titular</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between gap-2 text-base">
+            Titular
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                c.solicita_cobertura
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-secondary text-secondary-foreground'
+              }`}
+            >
+              {c.solicita_cobertura ? 'Enrolado en la póliza' : 'No enrolado'}
+            </span>
+          </CardTitle>
+        </CardHeader>
         <CardContent className="divide-y">
           <Row label="Nombre" value={`${c.nombres} ${c.apellidos}`} />
           <Row label="Sexo / nace" value={`${c.sexo} · ${fmtDate(c.fecha_nacimiento)}`} />
@@ -96,14 +109,26 @@ export function ClienteResumen({
           <Row label="Estatus migratorio" value={c.estatus_migratorio} />
           <Row label="Dirección" value={`${c.direccion}, ${c.ciudad}, ${c.estado_us} ${c.codigo_postal}`} />
           <Row label="Condado" value={c.condado} />
+          <Row label="Tipo de vivienda" value={c.tipo_vivienda} />
           <Row label="Correo" value={c.correo_electronico} />
           <Row label="Teléfono principal" value={c.phone_1} />
           {c.phone_2 && <Row label="Teléfono adicional" value={c.phone_2} />}
           {c.whatsapp && <Row label="WhatsApp" value={c.whatsapp} />}
           <Row label="Horario de contactabilidad" value={c.horario_contactabilidad} />
           <Row label="Origen de venta" value={c.origen_venta} />
+          <Row label="Pregunta de seguridad" value={c.pregunta_seguridad} />
           <Row label="Agente" value={c.agente?.name} />
         </CardContent>
+        {(c.contacto_emergencia_nombre || c.contacto_emergencia_telefono || c.contacto_emergencia_email) && (
+          <CardContent className="border-t pt-3">
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">Contacto de emergencia</p>
+            <div className="divide-y">
+              <Row label="Nombre" value={c.contacto_emergencia_nombre} />
+              <Row label="Teléfono" value={c.contacto_emergencia_telefono} />
+              <Row label="Correo" value={c.contacto_emergencia_email} />
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       <div className="space-y-4">
@@ -127,6 +152,7 @@ export function ClienteResumen({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {d.sexo} · nace {fmtDate(d.fecha_nacimiento)} · {d.estatus_migratorio}
+                  {d.social && ` · SSN ${d.social}`}
                   {d.medicare_medicaid && ' · Medicare/Medicaid'}
                 </p>
               </div>
@@ -187,6 +213,7 @@ export function ClienteResumen({
         <CardHeader><CardTitle className="text-base">Pago y evidencias</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="divide-y">
+            <Row label="Método de pago" value={c.pago ? METODO_PAGO_LABEL[c.pago.metodo] : null} />
             <Row
               label="Información de pago"
               value={
