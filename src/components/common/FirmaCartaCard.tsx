@@ -84,13 +84,13 @@ export function FirmaCartaCard({
   telefonoCliente?: string | null
 }) {
   const role = useAuthStore((s) => s.user?.role)
-  // El supervisor es solo-lectura total. BackOffice sí puede refrescar el
-  // estado y ver el PDF firmado, pero no le corresponde enviarle nada al
-  // cliente — eso es del agente (dueño del caso) o admin (el backend
-  // también lo bloquea, esto es solo para no mostrar un botón que igual
-  // va a fallar).
+  // El supervisor es solo-lectura total. BackOffice y Admin (2026-09-23:
+  // se le quitó a admin también) sí pueden refrescar el estado y ver el
+  // PDF firmado, pero no les corresponde enviarle nada al cliente — eso
+  // es solo del agente, dueño del caso (el backend también lo bloquea,
+  // esto es solo para no mostrar un botón que igual va a fallar).
   const soloLectura = role === 'supervisor'
-  const puedeEnviarCarta = role === 'agente' || role === 'admin'
+  const puedeEnviarCarta = role === 'agente'
   const { data: firmas, isLoading } = useFirmas(clienteId)
   const enviar = useEnviarFirma(clienteId)
   const actualizar = useActualizarEstadoFirma(clienteId)
