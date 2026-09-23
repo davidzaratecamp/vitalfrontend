@@ -224,7 +224,14 @@ export default function NuevoRegistroPage() {
           revisarla acá, justo después del Plan y el Pago (de donde sale el
           contenido de la carta), deja que se envíe temprano y se monitoree
           en tiempo real mientras se reúnen los documentos por separado. */}
-      {clienteId && <FirmaCartaCard clienteId={clienteId} correoCliente={cliente?.correo_electronico} telefonoCliente={cliente?.phone_1} />}
+      {clienteId && (
+        <FirmaCartaCard
+          clienteId={clienteId}
+          correoCliente={cliente?.correo_electronico}
+          telefonoCliente={cliente?.phone_1}
+          whatsappCliente={cliente?.whatsapp}
+        />
+      )}
 
       <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
         <AccordionItem value="evidencias" disabled={!clienteId}>

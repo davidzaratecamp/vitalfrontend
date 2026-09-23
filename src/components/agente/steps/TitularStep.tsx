@@ -242,13 +242,13 @@ export function TitularStep({
         <FormField label="Correo electrónico" required>
           <Input type="email" value={form.correo_electronico} onChange={(e) => set('correo_electronico', e.target.value)} required disabled={!editable} />
         </FormField>
-        <FormField label="Teléfono principal" required>
+        <FormField label="Teléfono principal" required hint="Aquí llega el SMS de la carta de firma.">
           <Input value={form.phone_1} onChange={(e) => set('phone_1', e.target.value)} required disabled={!editable} />
         </FormField>
         <FormField label="Teléfono secundario">
           <Input value={form.phone_2} onChange={(e) => set('phone_2', e.target.value)} disabled={!editable} />
         </FormField>
-        <FormField label="WhatsApp">
+        <FormField label="WhatsApp" hint="Aquí llega el WhatsApp de la carta de firma — si se deja vacío, se usa el teléfono principal.">
           <Input value={form.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} disabled={!editable} />
         </FormField>
         <FormField label="Horario de contactabilidad" className="sm:col-span-2 space-y-1.5">

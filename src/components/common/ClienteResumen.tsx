@@ -263,7 +263,7 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
 
       <ObservacionesCard clienteId={c.id} observaciones={c.observaciones} />
 
-      <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} telefonoCliente={c.phone_1} />
+      <FirmaCartaCard clienteId={c.id} correoCliente={c.correo_electronico} telefonoCliente={c.phone_1} whatsappCliente={c.whatsapp} />
     </div>
   )
 }

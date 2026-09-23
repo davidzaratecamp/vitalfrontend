@@ -80,10 +80,15 @@ export function FirmaCartaCard({
   clienteId,
   correoCliente,
   telefonoCliente,
+  whatsappCliente,
 }: {
   clienteId: number
   correoCliente?: string | null
   telefonoCliente?: string | null
+  /** Campo "WhatsApp" del cliente — distinto del teléfono principal (ese
+   * es por donde llega el SMS). Si el cliente lo dejó vacío, se usa el
+   * teléfono principal como respaldo (muchas veces es el mismo número). */
+  whatsappCliente?: string | null
 }) {
   const role = useAuthStore((s) => s.user?.role)
   // El supervisor es solo-lectura total. BackOffice y Admin (2026-09-23:
@@ -100,7 +105,9 @@ export function FirmaCartaCard({
   const [canal, setCanal] = useState<'email' | 'sms' | 'whatsapp'>('email')
 
   const telefonoValido = esTelefonoUS(telefonoCliente)
-  const puedeEnviarPorCanal = canal === 'email' ? !!correoCliente : telefonoValido
+  const whatsappValido = esTelefonoUS(whatsappCliente || telefonoCliente)
+  const puedeEnviarPorCanal =
+    canal === 'email' ? !!correoCliente : canal === 'whatsapp' ? whatsappValido : telefonoValido
 
   async function onEnviar() {
     try {
@@ -211,7 +218,11 @@ export function FirmaCartaCard({
             </div>
             {!puedeEnviarPorCanal && (
               <span className="text-xs text-muted-foreground">
-                {canal === 'email' ? 'Falta el correo del cliente.' : 'El teléfono debe ser un número de EE. UU. válido (10 dígitos).'}
+                {canal === 'email'
+                  ? 'Falta el correo del cliente.'
+                  : canal === 'whatsapp'
+                    ? 'Ni el WhatsApp ni el teléfono principal son un número de EE. UU. válido (10 dígitos).'
+                    : 'El teléfono principal debe ser un número de EE. UU. válido (10 dígitos).'}
               </span>
             )}
           </div>
