@@ -1,5 +1,5 @@
 import { useState, type ComponentType } from 'react'
-import { FileSignature, RefreshCw, Download, Send, Eye, CircleCheckBig, Clock, CircleAlert, Mail, MessageSquare } from 'lucide-react'
+import { FileSignature, RefreshCw, Download, Send, Eye, CircleCheckBig, Clock, CircleAlert, Mail, MessageSquare, MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 import { ESTADO_FIRMA_LABEL, ESTADO_FIRMA_COLOR } from '@/lib/clienteConstants'
 import { useAuthStore } from '@/stores/auth'
 import type { FirmaDocumento } from '@/lib/types'
+
+const CANAL_LABEL: Record<string, string> = { email: 'Correo', sms: 'SMS', whatsapp: 'WhatsApp' }
 
 function NodoPaso({ icon: Icon, label, meta, alcanzado }: { icon: ComponentType<{ className?: string }>; label: string; meta: string | null; alcanzado: boolean }) {
   return (
@@ -46,7 +48,7 @@ function TrackerFirma({ f }: { f: FirmaDocumento }) {
         icon={Send}
         label="Enviada"
         alcanzado
-        meta={`${fmtDateTime(f.enviado_at)}${f.enviado_por_nombre ? ` · ${f.enviado_por_nombre}` : ''} · ${f.canal === 'sms' ? 'SMS' : 'Correo'}`}
+        meta={`${fmtDateTime(f.enviado_at)}${f.enviado_por_nombre ? ` · ${f.enviado_por_nombre}` : ''} · ${CANAL_LABEL[f.canal] ?? f.canal}`}
       />
       <Conector activo={vistaAlcanzada} />
       <NodoPaso icon={Eye} label="Vista" alcanzado={vistaAlcanzada} meta={f.visto_at ? fmtDateTime(f.visto_at) : null} />
@@ -95,7 +97,7 @@ export function FirmaCartaCard({
   const enviar = useEnviarFirma(clienteId)
   const actualizar = useActualizarEstadoFirma(clienteId)
   const ultima = firmas?.[0]
-  const [canal, setCanal] = useState<'email' | 'sms'>('email')
+  const [canal, setCanal] = useState<'email' | 'sms' | 'whatsapp'>('email')
 
   const telefonoValido = esTelefonoUS(telefonoCliente)
   const puedeEnviarPorCanal = canal === 'email' ? !!correoCliente : telefonoValido
@@ -103,7 +105,7 @@ export function FirmaCartaCard({
   async function onEnviar() {
     try {
       await enviar.mutateAsync(canal)
-      toast.success(`Carta enviada por ${canal === 'sms' ? 'SMS' : 'correo'}`)
+      toast.success(`Carta enviada por ${CANAL_LABEL[canal].toLowerCase()}`)
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo enviar la carta'))
     }
@@ -195,6 +197,16 @@ export function FirmaCartaCard({
                 )}
               >
                 <MessageSquare className="size-3.5" /> SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => setCanal('whatsapp')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs font-medium transition-colors',
+                  canal === 'whatsapp' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <MessageCircle className="size-3.5" /> WhatsApp
               </button>
             </div>
             {!puedeEnviarPorCanal && (
