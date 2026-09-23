@@ -107,6 +107,13 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
           <Row label="Horario de contactabilidad" value={c.horario_contactabilidad} />
           <Row label="Origen de venta" value={c.origen_venta} />
           <Row label="Pregunta de seguridad" value={c.pregunta_seguridad} />
+          <Row
+            label="Respuesta de seguridad"
+            value={
+              c.respuesta_seguridad ??
+              (c.pregunta_seguridad ? 'Guardada antes de este cambio — no se puede recuperar' : null)
+            }
+          />
           <Row label="Agente" value={c.agente?.name} />
         </CardContent>
         {(c.contacto_emergencia_nombre || c.contacto_emergencia_telefono || c.contacto_emergencia_email) && (

@@ -152,14 +152,15 @@ export function PagoStep({
 
       <FormField
         label="Data Point"
-        hint={pago?.tiene_data_point ? 'Ya hay uno guardado — déjalo en blanco para no cambiarlo.' : 'Solo BackOffice y Admin pueden verlo — ni tú, una vez guardado.'}
+        hint={pago?.tiene_data_point ? 'Ya hay uno guardado — déjalo en blanco para no cambiarlo.' : 'Máximo 3 caracteres. Nadie puede verlo por el momento — ni tú, una vez guardado.'}
       >
         <Input
           type="password"
           autoComplete="off"
           spellCheck={false}
+          maxLength={3}
           value={dataPoint}
-          onChange={(e) => setDataPoint(e.target.value.slice(0, 300))}
+          onChange={(e) => setDataPoint(e.target.value.slice(0, 3))}
           onPaste={sinPortapapeles}
           onCopy={sinPortapapeles}
           onCut={sinPortapapeles}

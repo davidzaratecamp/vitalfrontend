@@ -261,6 +261,11 @@ export interface ClienteDetalle extends Cliente {
   evidencias: Evidencia[]
   historial: HistorialEstado[]
   observaciones: Observacion[]
+  /** Descifrada del lado del servidor, visible para admin/supervisor/
+   * backoffice (2026-09-23). Null si nunca se guardó, o si es una
+   * respuesta de antes de este cambio (guardada solo con hash
+   * irreversible — no se puede recuperar). */
+  respuesta_seguridad: string | null
 }
 
 export interface DashboardData {
