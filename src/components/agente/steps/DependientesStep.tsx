@@ -70,8 +70,8 @@ export function DependientesStep({ clienteId, editable }: { clienteId: number; e
                 <p className="font-medium">{d.nombres} {d.apellidos} <span className="text-muted-foreground">· {d.parentesco}</span></p>
                 <p className="text-xs text-muted-foreground">
                   {d.sexo} · nace {fmtDate(d.fecha_nacimiento)} · {d.estatus_migratorio}
-                  {d.solicita_cobertura && ' · solicita cobertura'}
-                  {d.medicare_medicaid && ' · Medicare/Medicaid'}
+                  {!!d.solicita_cobertura && ' · solicita cobertura'}
+                  {!!d.medicare_medicaid && ' · Medicare/Medicaid'}
                 </p>
               </div>
               {editable && (

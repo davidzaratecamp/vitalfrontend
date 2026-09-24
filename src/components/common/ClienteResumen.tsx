@@ -150,7 +150,7 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
                 <p className="text-xs text-muted-foreground">
                   {d.sexo} · nace {fmtDate(d.fecha_nacimiento)} · {d.estatus_migratorio}
                   {d.social && ` · SSN ${d.social}`}
-                  {d.medicare_medicaid && ' · Medicare/Medicaid'}
+                  {!!d.medicare_medicaid && ' · Medicare/Medicaid'}
                 </p>
               </div>
             ))}
