@@ -18,9 +18,36 @@ const empty = {
   gasto_max_bolsillo: '',
   valor_prima: '',
   pd: '',
-  sd: '',
+  sd_simbolo: '$' as '$' | '%',
+  sd_numero: '',
+  sd_resto: '',
   gd: '',
   npn_productor_id: '',
+}
+
+/**
+ * SD es el único de los tres (PD/SD/GD) donde Vital manda el símbolo tal
+ * cual — FirmaCloud no le agrega nada (ver firmas.service.js). Para que
+ * nunca puedan quedar caracteres duplicados ($$ , %%, $100%), el agente
+ * elige el símbolo aparte del número/descripción — nunca los escribe
+ * mezclados en el mismo texto.
+ */
+function decomponerSd(valor: string): { simbolo: '$' | '%'; numero: string; resto: string } {
+  if (!valor) return { simbolo: '$', numero: '', resto: '' }
+  const conPesos = valor.match(/^\$\s*(\d+(?:\.\d+)?)\s*(.*)$/)
+  if (conPesos) return { simbolo: '$', numero: conPesos[1], resto: conPesos[2].trim() }
+  const conPorcentaje = valor.match(/^(\d+(?:\.\d+)?)\s*%\s*(.*)$/)
+  if (conPorcentaje) return { simbolo: '%', numero: conPorcentaje[1], resto: conPorcentaje[2].trim() }
+  // No matchea ningún patrón conocido (ej. "Sin cargo..." de antes de este
+  // cambio) — se deja todo en "resto" para no perder el texto ya guardado.
+  return { simbolo: '$', numero: '', resto: valor }
+}
+
+function componerSd(simbolo: '$' | '%', numero: string, resto: string): string {
+  const num = numero.trim()
+  const desc = resto.trim()
+  if (!num) return desc // sin número (ej. "Sin cargo por visita...") — texto tal cual, sin símbolo.
+  return simbolo === '$' ? `$${num}${desc ? ` ${desc}` : ''}` : `${num}%${desc ? ` ${desc}` : ''}`
 }
 
 export function PlanSaludStep({
@@ -53,6 +80,7 @@ export function PlanSaludStep({
 
   useEffect(() => {
     if (!plan) return
+    const sd = decomponerSd(plan.sd ?? '')
     setForm({
       aseguradora_id: String(plan.aseguradora_id),
       nombre_plan: plan.nombre_plan,
@@ -62,7 +90,9 @@ export function PlanSaludStep({
       gasto_max_bolsillo: plan.gasto_max_bolsillo ?? '',
       valor_prima: plan.valor_prima,
       pd: plan.pd ?? '',
-      sd: plan.sd ?? '',
+      sd_simbolo: sd.simbolo,
+      sd_numero: sd.numero,
+      sd_resto: sd.resto,
       gd: plan.gd ?? '',
       npn_productor_id: plan.npn_productor_id ? String(plan.npn_productor_id) : '',
     })
@@ -83,7 +113,7 @@ export function PlanSaludStep({
         gasto_max_bolsillo: form.gasto_max_bolsillo === '' ? null : Number(form.gasto_max_bolsillo),
         valor_prima: Number(form.valor_prima),
         pd: form.pd === '' ? null : form.pd,
-        sd: form.sd === '' ? null : form.sd,
+        sd: componerSd(form.sd_simbolo, form.sd_numero, form.sd_resto) || null,
         gd: form.gd === '' ? null : form.gd,
         npn_productor_id: form.npn_productor_id === '' ? null : Number(form.npn_productor_id),
       })
@@ -163,17 +193,39 @@ export function PlanSaludStep({
       </div>
       <div className="space-y-3 rounded-md border p-3">
         <p className="text-xs font-medium text-muted-foreground">
-          Cobertura para la carta de firma — cópialo tal como aparece en la pantalla "Usted paga" (ej. "Sin cargo por visita desde el día 1", "$100 por visita desde el día 1", "50% coaseguro después del deducible").
+          Cobertura para la carta de firma — cópialo tal como aparece en la pantalla "Usted paga" (ej. "Sin cargo por visita desde el día 1", "100 por visita desde el día 1", "50 coaseguro después del deducible"). En PD y GD no escribas el $, ya se agrega solo; en SD elige $ o % aparte.
         </p>
         <div className="grid gap-4 sm:grid-cols-3">
-          <FormField label="Atención primaria (PD)">
-            <Input value={form.pd} onChange={(e) => set('pd', e.target.value)} disabled={!editable} placeholder="Sin cargo por visita desde el día 1" />
+          <FormField label="Atención primaria (PD)" hint="En la carta siempre aparece con $ — FirmaCloud lo agrega solo, no lo escribas.">
+            <Input value={form.pd} onChange={(e) => set('pd', e.target.value)} disabled={!editable} placeholder="5 por visita desde el día 1" />
           </FormField>
           <FormField label="Atención de especialista (SD)">
-            <Input value={form.sd} onChange={(e) => set('sd', e.target.value)} disabled={!editable} placeholder="$100 por visita desde el día 1" />
+            <div className="flex gap-1.5">
+              <Select value={form.sd_simbolo} onValueChange={(v) => set('sd_simbolo', v as '$' | '%')} disabled={!editable}>
+                <SelectTrigger className="w-16 shrink-0"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="$">$</SelectItem>
+                  <SelectItem value="%">%</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                className="w-20 shrink-0"
+                inputMode="decimal"
+                placeholder="100"
+                value={form.sd_numero}
+                onChange={(e) => set('sd_numero', e.target.value.replace(/[^\d.]/g, ''))}
+                disabled={!editable}
+              />
+              <Input
+                placeholder="por visita desde el día 1"
+                value={form.sd_resto}
+                onChange={(e) => set('sd_resto', e.target.value)}
+                disabled={!editable}
+              />
+            </div>
           </FormField>
-          <FormField label="Medicamento genérico (GD)">
-            <Input value={form.gd} onChange={(e) => set('gd', e.target.value)} disabled={!editable} placeholder="$35 Copago después del deducible" />
+          <FormField label="Medicamento genérico (GD)" hint="En la carta siempre aparece con $ — FirmaCloud lo agrega solo, no lo escribas.">
+            <Input value={form.gd} onChange={(e) => set('gd', e.target.value)} disabled={!editable} placeholder="35 Copago después del deducible" />
           </FormField>
         </div>
       </div>
