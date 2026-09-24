@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText } from 'lucide-react'
+import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { ObservacionesCard } from '@/components/common/ObservacionesCard'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -17,7 +18,7 @@ import { IngresosStep } from '@/components/agente/steps/IngresosStep'
 import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
-import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar } from '@/hooks/clientes'
+import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar, useEliminarCliente } from '@/hooks/clientes'
 import { useFirmas } from '@/hooks/firmas'
 import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
@@ -52,6 +53,8 @@ export default function NuevoRegistroPage() {
   // refrescó).
   const firmas = useFirmas(cliente?.id)
   const finalizar = useFinalizar(id ?? 0)
+  const eliminar = useEliminarCliente()
+  const [confirmBorrar, setConfirmBorrar] = useState(false)
   // Todos los hooks van antes de los `return` de abajo — si no, React se
   // queja (con razón: el orden de hooks no puede depender de una condición).
   const estadoActivo = cliente?.estado_us || estadoElegido
@@ -103,6 +106,17 @@ export default function NuevoRegistroPage() {
     }
   }
 
+  async function onEliminar() {
+    if (!clienteId) return
+    try {
+      await eliminar.mutateAsync(clienteId)
+      toast.success('Borrador eliminado')
+      navigate('/')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -114,9 +128,16 @@ export default function NuevoRegistroPage() {
         }
         actions={
           cliente && (
-            <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
-              {ESTADO_CLIENTE_LABEL[cliente.estado]}
-            </span>
+            <>
+              {cliente.estado === 'borrador' && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmBorrar(true)}>
+                  <Trash2 className="size-4 text-destructive" /> Eliminar borrador
+                </Button>
+              )}
+              <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
+                {ESTADO_CLIENTE_LABEL[cliente.estado]}
+              </span>
+            </>
           )
         }
       />
@@ -258,6 +279,17 @@ export default function NuevoRegistroPage() {
           </Button>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={confirmBorrar}
+        onOpenChange={setConfirmBorrar}
+        title="¿Eliminar este borrador?"
+        description="Se va a borrar por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        loading={eliminar.isPending}
+        onConfirm={onEliminar}
+      />
     </div>
   )
 }

@@ -1,20 +1,39 @@
-import { useParams } from 'react-router-dom'
-import { History } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
+import { History, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
 import { SoportePolizaCard } from '@/components/common/SoportePolizaCard'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useCliente } from '@/hooks/clientes'
+import { useCliente, useEliminarCliente } from '@/hooks/clientes'
+import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
 import { fmtDateTime } from '@/lib/dateFormat'
 
 export default function ClienteDetallePage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { data: cliente, isLoading } = useCliente(id)
+  const eliminar = useEliminarCliente()
+  const [confirmBorrar, setConfirmBorrar] = useState(false)
 
   if (isLoading || !cliente) return <Skeleton className="h-96 rounded-xl" />
+
+  async function onEliminar() {
+    if (!id) return
+    try {
+      await eliminar.mutateAsync(id)
+      toast.success('Borrador eliminado')
+      navigate('/')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -23,6 +42,11 @@ export default function ClienteDetallePage() {
         description="Vista 360 — solo lectura."
         actions={
           <>
+            {cliente.estado === 'borrador' && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmBorrar(true)}>
+                <Trash2 className="size-4 text-destructive" /> Eliminar borrador
+              </Button>
+            )}
             <CopyableId id={cliente.id} />
             <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
               {ESTADO_CLIENTE_LABEL[cliente.estado]}
@@ -55,6 +79,17 @@ export default function ClienteDetallePage() {
           ))}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmBorrar}
+        onOpenChange={setConfirmBorrar}
+        title="¿Eliminar este borrador?"
+        description="Se va a borrar por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        loading={eliminar.isPending}
+        onConfirm={onEliminar}
+      />
     </div>
   )
 }

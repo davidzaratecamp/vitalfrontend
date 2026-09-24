@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FilePlus2, Search, Users, ClipboardList, Undo2, CheckCircle2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { FilePlus2, Search, Users, ClipboardList, Undo2, CheckCircle2, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { EmptyState } from '@/components/common/EmptyState'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { KpiCard } from '@/components/dashboard/KpiCard'
-import { useClientes } from '@/hooks/clientes'
+import { useClientes, useEliminarCliente } from '@/hooks/clientes'
 import { useResumenAgente } from '@/hooks/agente'
+import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
 import { num } from '@/lib/analyticsFormat'
 import { fmtDate } from '@/lib/dateFormat'
@@ -21,6 +24,19 @@ export default function MisClientesPage() {
   const [q, setQ] = useState('')
   const { data, isLoading } = useClientes({ estado: estado === 'all' ? undefined : estado, q: q || undefined })
   const { data: resumen, isLoading: cargandoResumen } = useResumenAgente()
+  const eliminar = useEliminarCliente()
+  const [porBorrar, setPorBorrar] = useState<{ id: number; nombre: string } | null>(null)
+
+  async function confirmarBorrado() {
+    if (!porBorrar) return
+    try {
+      await eliminar.mutateAsync(porBorrar.id)
+      toast.success('Borrador eliminado')
+      setPorBorrar(null)
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -77,6 +93,7 @@ export default function MisClientesPage() {
                   <th className="px-4 py-2.5 font-medium">Contacto</th>
                   <th className="px-4 py-2.5 font-medium">Estado</th>
                   <th className="px-4 py-2.5 font-medium">Creado</th>
+                  <th className="px-4 py-2.5 font-medium" />
                 </tr>
               </thead>
               <tbody>
@@ -94,6 +111,22 @@ export default function MisClientesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{fmtDate(c.created_at)}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      {c.estado === 'borrador' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          title="Eliminar borrador"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setPorBorrar({ id: c.id, nombre: `${c.nombres} ${c.apellidos}` })
+                          }}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -101,6 +134,17 @@ export default function MisClientesPage() {
           </div>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={!!porBorrar}
+        onOpenChange={(v) => !v && setPorBorrar(null)}
+        title="¿Eliminar este borrador?"
+        description={`Se va a borrar "${porBorrar?.nombre}" por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer.`}
+        confirmLabel="Eliminar"
+        destructive
+        loading={eliminar.isPending}
+        onConfirm={confirmarBorrado}
+      />
     </div>
   )
 }

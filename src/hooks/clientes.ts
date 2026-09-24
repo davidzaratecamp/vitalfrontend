@@ -75,6 +75,16 @@ export function useActualizarTitular(id: string | number) {
   })
 }
 
+/** Solo borra si el registro sigue en 'borrador' (el backend lo exige) —
+ * agente (el suyo), supervisor y admin (2026-09-24). */
+export function useEliminarCliente() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string | number) => (await api.delete(`/clientes/${id}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes'] }),
+  })
+}
+
 /* ───────────────────────── Paso 2 — Cónyuge ───────────────────────── */
 
 export const useConyuge = (id: string | number | undefined) =>
