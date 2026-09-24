@@ -5,6 +5,7 @@ import { FilePlus2, Search, Users, ClipboardList, Undo2, CheckCircle2, Trash2 } 
 import { PageHeader } from '@/components/common/PageHeader'
 import { EmptyState } from '@/components/common/EmptyState'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { CopyableId } from '@/components/common/CopyableId'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -89,6 +90,7 @@ export default function MisClientesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="px-4 py-2.5 font-medium">ID</th>
                   <th className="px-4 py-2.5 font-medium">Cliente</th>
                   <th className="px-4 py-2.5 font-medium">Contacto</th>
                   <th className="px-4 py-2.5 font-medium">Estado</th>
@@ -103,6 +105,7 @@ export default function MisClientesPage() {
                     onClick={() => navigate(`/clientes/${c.id}/editar`)}
                     className="cursor-pointer border-b last:border-0 hover:bg-muted/30"
                   >
+                    <td className="px-4 py-2.5"><CopyableId id={c.id} /></td>
                     <td className="px-4 py-2.5 font-medium">{c.nombres} {c.apellidos}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{c.correo_electronico} · {c.phone_1}</td>
                     <td className="px-4 py-2.5">

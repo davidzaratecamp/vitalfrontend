@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { ObservacionesCard } from '@/components/common/ObservacionesCard'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { CopyableId } from '@/components/common/CopyableId'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -129,6 +130,7 @@ export default function NuevoRegistroPage() {
         actions={
           cliente && (
             <>
+              <CopyableId id={cliente.id} />
               {cliente.estado === 'borrador' && (
                 <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmBorrar(true)}>
                   <Trash2 className="size-4 text-destructive" /> Eliminar borrador
