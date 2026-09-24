@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { HeartPulse, Moon, Sun, LogOut, User as UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,30 @@ function itemClass({ isActive }: { isActive: boolean }) {
   )
 }
 
+/** Cuando un ítem trae `group` distinto del anterior, se pinta un separador
+ * + una mini-etiqueta antes de él — así un menú con varias pestañas (ej.
+ * "Ventas" vs "Postventa" en AgentShell) queda agrupado visualmente en vez
+ * de una fila plana de botones sin relación aparente entre sí. */
+function NavItems({ items }: { items: NavItem[] }) {
+  return (
+    <>
+      {items.map((n, i) => (
+        <Fragment key={n.to}>
+          {n.group && n.group !== items[i - 1]?.group && (
+            <span className={cn('shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60', i > 0 && 'ml-1.5 border-l pl-3')}>
+              {n.group}
+            </span>
+          )}
+          <NavLink to={n.to} end={n.end} className={itemClass}>
+            <n.icon className="size-4" />
+            {n.label}
+          </NavLink>
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
 export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: string }) {
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
@@ -49,13 +74,8 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
           </div>
         </div>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {items.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end} className={itemClass}>
-              <n.icon className="size-4" />
-              {n.label}
-            </NavLink>
-          ))}
+        <nav className="hidden items-center gap-1 overflow-x-auto md:flex">
+          <NavItems items={items} />
         </nav>
 
         <div className="flex-1" />
@@ -96,12 +116,7 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
 
       {/* En móvil el menú no cabe junto a la marca — baja como tira con scroll horizontal. */}
       <nav className="flex items-center gap-1 overflow-x-auto border-t px-4 py-1.5 md:hidden">
-        {items.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} className={itemClass}>
-            <n.icon className="size-4" />
-            {n.label}
-          </NavLink>
-        ))}
+        <NavItems items={items} />
       </nav>
     </header>
   )

@@ -9,6 +9,11 @@ export interface NavItem {
   label: string
   icon: ComponentType<{ className?: string }>
   end?: boolean
+  /** Etiqueta de sección — cuando cambia respecto del ítem anterior, TopNav
+   * pinta un separador con este texto antes de agruparlos visualmente
+   * (ej. "Ventas" / "Postventa" en AgentShell). Opcional: sin `group`, el
+   * ítem se ve igual que antes. */
+  group?: string
 }
 
 function itemClass({ isActive }: { isActive: boolean }) {

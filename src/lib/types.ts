@@ -1,3 +1,6 @@
+// 'customer' existió como rol aparte por un día (2026-09-24) — se integró
+// dentro de 'agente' ("el customer es el mismo agente"), ver
+// casosPostventa.service.js/.routes.js.
 export type Role = 'agente' | 'backoffice' | 'admin' | 'supervisor'
 
 /** Vital absorbió a la extinta Asiste Health Care ("Vital Asiste") pero
@@ -318,4 +321,73 @@ export interface ClienteContacto {
   estado: EstadoCliente
   agente_id: number
   agente_nombre: string
+}
+
+/* ───────────────────────── Postventa (Agente / BackOffice) ───────────────────────── */
+
+export type EstadoCasoPostventa = 'nuevo' | 'seguimiento' | 'cerrado' | 'escalado_backoffice'
+export type TipoGestionPostventa = 'reclamacion' | 'cancelacion' | 'gestion_habitual'
+
+/** Cliente ya APROBADO que matcheó por teléfono al validar antes de abrir un
+ * caso de postventa — ver casosPostventa.service.js#validarTelefono. */
+export interface ClientePostventaContacto {
+  id: number
+  nombres: string
+  apellidos: string
+  estado: EstadoCliente
+  phone_1: string
+  phone_2: string | null
+  whatsapp: string | null
+  agente_nombre: string
+}
+
+export interface CasoPostventaListItem {
+  id: number
+  cliente_id: number
+  tipo_caso: string
+  tipo_gestion: TipoGestionPostventa | null
+  estado: EstadoCasoPostventa
+  telefono_contacto: string
+  created_at: string
+  updated_at: string
+  cerrado_at: string | null
+  nombres: string
+  apellidos: string
+  correo_electronico: string
+  phone_1: string
+  gestionado_por_nombre: string | null
+  /** Rol de quien lo gestionó por última vez — para que admin distinga de
+   * un vistazo si lo llevó un agente o BackOffice. */
+  gestionado_por_rol: Role | null
+}
+
+export interface CasoPostventaDetalle {
+  id: number
+  cliente_id: number
+  tipo_caso: string
+  tipo_gestion: TipoGestionPostventa | null
+  estado: EstadoCasoPostventa
+  telefono_contacto: string
+  observacion_inicial: string | null
+  creado_por: number
+  creado_por_nombre: string
+  gestionado_por: number | null
+  gestionado_por_nombre: string | null
+  cerrado_at: string | null
+  created_at: string
+  updated_at: string
+  cliente_nombres: string
+  cliente_apellidos: string
+  cliente_estado: EstadoCliente
+}
+
+export interface HistorialCasoPostventa {
+  id: number
+  caso_postventa_id: number
+  estado_anterior: EstadoCasoPostventa | null
+  estado_nuevo: EstadoCasoPostventa
+  cambiado_por: number
+  cambiado_por_nombre: string
+  motivo: string | null
+  created_at: string
 }

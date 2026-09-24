@@ -26,13 +26,16 @@ export default function MisClientesPage() {
   const { data, isLoading } = useClientes({ estado: estado === 'all' ? undefined : estado, q: q || undefined })
   const { data: resumen, isLoading: cargandoResumen } = useResumenAgente()
   const eliminar = useEliminarCliente()
-  const [porBorrar, setPorBorrar] = useState<{ id: number; nombre: string } | null>(null)
+  // El agente puede eliminar sus propios borradores Y los que BackOffice le
+  // rechazó (2026-09-24, a pedido del usuario) — cualquier otro estado ni
+  // siquiera muestra el botón, el backend igual lo bloquearía.
+  const [porBorrar, setPorBorrar] = useState<{ id: number; nombre: string; estado: string } | null>(null)
 
   async function confirmarBorrado() {
     if (!porBorrar) return
     try {
       await eliminar.mutateAsync(porBorrar.id)
-      toast.success('Borrador eliminado')
+      toast.success(porBorrar.estado === 'borrador' ? 'Borrador eliminado' : 'Registro rechazado eliminado')
       setPorBorrar(null)
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
@@ -115,15 +118,15 @@ export default function MisClientesPage() {
                     </td>
                     <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{fmtDate(c.created_at)}</td>
                     <td className="px-4 py-2.5 text-right">
-                      {c.estado === 'borrador' && (
+                      {(c.estado === 'borrador' || c.estado === 'rechazado_backoffice') && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          title="Eliminar borrador"
+                          title={c.estado === 'borrador' ? 'Eliminar borrador' : 'Eliminar registro rechazado'}
                           onClick={(e) => {
                             e.stopPropagation()
-                            setPorBorrar({ id: c.id, nombre: `${c.nombres} ${c.apellidos}` })
+                            setPorBorrar({ id: c.id, nombre: `${c.nombres} ${c.apellidos}`, estado: c.estado })
                           }}
                         >
                           <Trash2 className="size-4 text-destructive" />
@@ -141,7 +144,7 @@ export default function MisClientesPage() {
       <ConfirmDialog
         open={!!porBorrar}
         onOpenChange={(v) => !v && setPorBorrar(null)}
-        title="¿Eliminar este borrador?"
+        title={porBorrar?.estado === 'borrador' ? '¿Eliminar este borrador?' : '¿Eliminar este registro rechazado?'}
         description={`Se va a borrar "${porBorrar?.nombre}" por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer.`}
         confirmLabel="Eliminar"
         destructive

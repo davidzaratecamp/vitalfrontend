@@ -111,7 +111,7 @@ export default function NuevoRegistroPage() {
     if (!clienteId) return
     try {
       await eliminar.mutateAsync(clienteId)
-      toast.success('Borrador eliminado')
+      toast.success(cliente?.estado === 'borrador' ? 'Borrador eliminado' : 'Registro eliminado')
       navigate('/')
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo eliminar'))
@@ -131,9 +131,10 @@ export default function NuevoRegistroPage() {
           cliente && (
             <>
               <CopyableId id={cliente.id} />
-              {cliente.estado === 'borrador' && (
+              {(cliente.estado === 'borrador' || cliente.estado === 'rechazado_backoffice') && (
                 <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmBorrar(true)}>
-                  <Trash2 className="size-4 text-destructive" /> Eliminar borrador
+                  <Trash2 className="size-4 text-destructive" />
+                  {cliente.estado === 'borrador' ? 'Eliminar borrador' : 'Eliminar registro'}
                 </Button>
               )}
               <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CLIENTE_COLOR[cliente.estado]}`}>
@@ -285,7 +286,7 @@ export default function NuevoRegistroPage() {
       <ConfirmDialog
         open={confirmBorrar}
         onOpenChange={setConfirmBorrar}
-        title="¿Eliminar este borrador?"
+        title={cliente?.estado === 'borrador' ? '¿Eliminar este borrador?' : '¿Eliminar este registro rechazado?'}
         description="Se va a borrar por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer."
         confirmLabel="Eliminar"
         destructive
