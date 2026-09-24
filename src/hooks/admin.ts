@@ -4,6 +4,8 @@ import type { DashboardData, ReportePage } from '@/lib/types'
 
 export interface AdminFilters {
   estado?: string
+  /** Nombre, apellido, correo, SSN, o ID exacto del cliente. */
+  q?: string
   from?: string
   to?: string
   agenteId?: number | string

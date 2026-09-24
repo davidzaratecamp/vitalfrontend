@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ChevronLeft, ChevronRight, Download, FileSpreadsheet } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, Search } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Card } from '@/components/ui/card'
@@ -23,6 +23,7 @@ export default function ReportePage() {
   const navigate = useNavigate()
   const esAdmin = useAuthStore((s) => s.user?.role) === 'admin'
   const [estado, setEstado] = useState('all')
+  const [q, setQ] = useState('')
   const [agenteId, setAgenteId] = useState('all')
   // Solo admin puede elegir — supervisor ve la suya sin desplegable, el
   // backend la fuerza siempre, sin importar lo que se mande acá.
@@ -36,6 +37,7 @@ export default function ReportePage() {
   const { data: empresas } = useEmpresas()
   const filters = {
     estado: estado === 'all' ? undefined : estado,
+    q: q || undefined,
     agenteId: agenteId === 'all' ? undefined : agenteId,
     empresaId: esAdmin && empresaId !== 'all' ? empresaId : undefined,
     from: from || undefined,
@@ -70,6 +72,15 @@ export default function ReportePage() {
       />
 
       <div className="flex flex-wrap items-end gap-2">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="h-9 w-56 pl-8"
+            placeholder="Nombre, correo, SSN, ID..."
+            value={q}
+            onChange={(e) => { setQ(e.target.value); setPage(1) }}
+          />
+        </div>
         <Select value={estado} onValueChange={(v) => { setEstado(v); setPage(1) }}>
           <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
           <SelectContent>

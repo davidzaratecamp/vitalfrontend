@@ -78,7 +78,7 @@ export function ClientesEstadoTable({
       <div className="flex flex-wrap items-end gap-2">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-9 w-56 pl-8" placeholder="Nombre, correo, SSN, teléfono..." value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input className="h-9 w-56 pl-8" placeholder="Nombre, correo, SSN, teléfono, ID..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <Select value={agenteId} onValueChange={setAgenteId}>
           <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
