@@ -189,9 +189,9 @@ export default function GestionCasoPage() {
                 postventa (donde se revisan clientes YA aprobados, el
                 escenario típico para pedir estos datos) no tenía forma de
                 pedirlos (2026-09-25, reportado por el usuario). */}
-            {(pago.data?.ultimos_4_digitos || pago.data?.tiene_data_point) && (
+            {(pago.data?.ultimos_4_digitos || pago.data?.ultimos_4_cuenta || pago.data?.tiene_data_point) && (
               <div className="flex flex-wrap gap-3 border-t pt-3">
-                {pago.data?.ultimos_4_digitos && <NumeroTarjetaReveal clienteId={clienteId} />}
+                {(pago.data?.ultimos_4_digitos || pago.data?.ultimos_4_cuenta) && <NumeroTarjetaReveal clienteId={clienteId} />}
                 {pago.data?.tiene_data_point && <DataPointReveal clienteId={clienteId} />}
               </div>
             )}

@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileSpreadsheet, ShieldCheck, Headphones } from 'lucide-react'
+import { LayoutDashboard, FileSpreadsheet, ShieldCheck, Headphones, Trash2 } from 'lucide-react'
 import { Shell } from './Shell'
 import type { NavItem } from './Sidebar'
 
@@ -11,6 +11,7 @@ const items: NavItem[] = [
   { to: '/', label: 'Panel general', icon: LayoutDashboard, end: true },
   { to: '/reporte', label: 'Reporte consolidado', icon: FileSpreadsheet },
   { to: '/postventa', label: 'Postventa', icon: Headphones },
+  { to: '/papelera', label: 'Papelera', icon: Trash2 },
   { to: '/catalogos', label: 'Aseguradoras', icon: ShieldCheck },
 ]
 

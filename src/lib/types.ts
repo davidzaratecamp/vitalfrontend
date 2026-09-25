@@ -185,6 +185,12 @@ export interface InformacionPago {
   nombre_titular_tarjeta: string | null
   fecha_expiracion_mes: number | null
   fecha_expiracion_ano: number | null
+  /** Datos bancarios (débito automático) — opcionales (2026-09-26).
+   * numero_cuenta nunca viaja acá, solo el enmascarado ultimos_4_cuenta —
+   * mismo trato que la tarjeta, ver NumeroTarjetaCompleto. */
+  nombre_banco: string | null
+  numero_ruta: string | null
+  ultimos_4_cuenta: string | null
   /** true si ya hay un "Data Point" guardado — el valor en sí nunca viaja
    * acá, ni siquiera al agente que lo escribió. Ver DataPointCompleto. */
   tiene_data_point: boolean
@@ -193,13 +199,17 @@ export interface InformacionPago {
 /** Solo BackOffice/Admin — GET /clientes/:id/pago/numero-completo, queda
  * auditado en el servidor (accesos_tarjeta) en cada llamada. */
 export interface NumeroTarjetaCompleto {
-  numero_tarjeta: string
+  numero_tarjeta: string | null
   marca_tarjeta: MarcaTarjeta | null
-  /** "Todos los datos de la tarjeta" (2026-09-25) — junto con el número.
+  /** "Todos los datos de la tarjeta" (2026-09-25/26) — junto con el número.
    * El CVV nunca se incluye: no se guarda, en ningún lado. */
   nombre_titular_tarjeta: string | null
   fecha_expiracion_mes: number | null
   fecha_expiracion_ano: number | null
+  /** Datos bancarios (débito automático), mismo permiso que la tarjeta. */
+  nombre_banco: string | null
+  numero_ruta: string | null
+  numero_cuenta: string | null
 }
 
 /** Solo BackOffice/Admin — GET /clientes/:id/pago/data-point. */
@@ -304,6 +314,36 @@ export interface ReportePage {
   total: number
   total_pages: number
   rows: (ClienteListItem & { social: string; estado_us: string; ciudad: string; origen_venta: string })[]
+}
+
+/** Fila de la "papelera" — foto que deja eliminarCliente() antes de borrar
+ * un borrador/rechazado (2026-09-26). Solo admin la ve. No es el cliente
+ * completo (dependientes/evidencias/etc. sí se pierden), es un registro de
+ * auditoría de qué existió y quién lo eliminó. */
+export interface ClienteEliminado {
+  id: number
+  cliente_id_original: number
+  nombres: string
+  apellidos: string
+  social: string | null
+  correo_electronico: string | null
+  phone_1: string | null
+  estado_previo: 'borrador' | 'rechazado_backoffice'
+  agente_id: number
+  agente_nombre: string
+  empresa_id: number | null
+  eliminado_por: number
+  eliminado_por_nombre: string
+  eliminado_por_rol: 'agente' | 'supervisor' | 'admin'
+  created_at: string
+}
+
+export interface PapeleraPage {
+  page: number
+  page_size: number
+  total: number
+  total_pages: number
+  rows: ClienteEliminado[]
 }
 
 export interface Notificacion {

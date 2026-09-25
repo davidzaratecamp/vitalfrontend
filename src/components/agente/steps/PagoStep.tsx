@@ -11,7 +11,14 @@ import { apiErrorMessage } from '@/lib/api'
 import { detectarMarcaTarjeta, formatearTarjeta } from '@/lib/card'
 import { METODO_PAGO, METODO_PAGO_LABEL, MESES_EXPIRACION, aniosExpiracion } from '@/lib/clienteConstants'
 
-const empty = { metodo: 'tarjeta', nombre_titular_tarjeta: '', fecha_expiracion_mes: '', fecha_expiracion_ano: '' }
+const empty = {
+  metodo: 'tarjeta',
+  nombre_titular_tarjeta: '',
+  fecha_expiracion_mes: '',
+  fecha_expiracion_ano: '',
+  nombre_banco: '',
+  numero_ruta: '',
+}
 const anios = aniosExpiracion()
 
 // Bloquea copiar/pegar/cortar en el campo de la tarjeta — no queremos que
@@ -39,6 +46,9 @@ export function PagoStep({
   // vuelve a ver, ni siquiera él — vacío significa "no cambiar el Data
   // Point guardado".
   const [dataPoint, setDataPoint] = useState('')
+  // Mismo trato que el número de tarjeta: nunca llega prellenado, vacío
+  // significa "no cambiar la cuenta guardada" (2026-09-26).
+  const [numeroCuenta, setNumeroCuenta] = useState('')
 
   useEffect(() => {
     if (!pago) return
@@ -47,6 +57,8 @@ export function PagoStep({
       nombre_titular_tarjeta: pago.nombre_titular_tarjeta ?? '',
       fecha_expiracion_mes: pago.fecha_expiracion_mes ? String(pago.fecha_expiracion_mes) : '',
       fecha_expiracion_ano: pago.fecha_expiracion_ano ? String(pago.fecha_expiracion_ano) : '',
+      nombre_banco: pago.nombre_banco ?? '',
+      numero_ruta: pago.numero_ruta ?? '',
     })
   }, [pago])
 
@@ -61,6 +73,14 @@ export function PagoStep({
       toast.error('El número de tarjeta debe tener al menos 13 dígitos')
       return
     }
+    if (numeroCuenta && (numeroCuenta.length < 4 || numeroCuenta.length > 17)) {
+      toast.error('El número de cuenta debe tener entre 4 y 17 dígitos')
+      return
+    }
+    if (form.numero_ruta && form.numero_ruta.length !== 9) {
+      toast.error('El número de ruta (routing number) tiene 9 dígitos')
+      return
+    }
     try {
       await setPago.mutateAsync({
         metodo: form.metodo,
@@ -69,9 +89,13 @@ export function PagoStep({
         fecha_expiracion_mes: form.fecha_expiracion_mes ? Number(form.fecha_expiracion_mes) : null,
         fecha_expiracion_ano: form.fecha_expiracion_ano ? Number(form.fecha_expiracion_ano) : null,
         data_point: dataPoint || undefined,
+        nombre_banco: form.nombre_banco || null,
+        numero_ruta: form.numero_ruta || null,
+        numero_cuenta: numeroCuenta || undefined,
       })
       setNumeroTarjeta('')
       setDataPoint('')
+      setNumeroCuenta('')
       toast.success('Información de pago guardada')
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo guardar'))
@@ -150,9 +174,48 @@ export function PagoStep({
         </div>
       </div>
 
+      <div className="space-y-1">
+        <p className="text-sm font-medium">Datos bancarios (opcional)</p>
+        <p className="text-xs text-muted-foreground">Para cuando el pago es débito automático desde una cuenta, no una tarjeta. Ninguno es obligatorio.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <FormField label="Nombre del banco">
+          <Input value={form.nombre_banco} onChange={(e) => set('nombre_banco', e.target.value)} disabled={!editable} />
+        </FormField>
+        <FormField label="Número de ruta (routing)">
+          <Input
+            inputMode="numeric"
+            maxLength={9}
+            value={form.numero_ruta}
+            onChange={(e) => set('numero_ruta', e.target.value.replace(/\D/g, '').slice(0, 9))}
+            placeholder="9 dígitos"
+            disabled={!editable}
+          />
+        </FormField>
+        <FormField
+          label="Número de cuenta"
+          hint={pago?.ultimos_4_cuenta ? `Ya hay una guardada terminada en ${pago.ultimos_4_cuenta} — déjalo en blanco para no cambiarla.` : undefined}
+        >
+          <Input
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            spellCheck={false}
+            value={numeroCuenta}
+            onChange={(e) => setNumeroCuenta(e.target.value.replace(/\D/g, '').slice(0, 17))}
+            onPaste={sinPortapapeles}
+            onCopy={sinPortapapeles}
+            onCut={sinPortapapeles}
+            onContextMenu={(e) => e.preventDefault()}
+            placeholder="••••••••••"
+            disabled={!editable}
+          />
+        </FormField>
+      </div>
+
       <FormField
         label="Data Point"
-        hint={pago?.tiene_data_point ? 'Ya hay uno guardado — déjalo en blanco para no cambiarlo.' : 'Máximo 3 caracteres. Nadie puede verlo por el momento — ni tú, una vez guardado.'}
+        hint={pago?.tiene_data_point ? 'Ya hay uno guardado — déjalo en blanco para no cambiarlo.' : 'Máximo 3 caracteres. Solo lo puede revelar quien tenga permiso — ni tú, una vez guardado.'}
       >
         <Input
           type="password"

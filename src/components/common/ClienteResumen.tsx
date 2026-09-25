@@ -179,7 +179,7 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
               }
             />
           </div>
-          {c.pago?.ultimos_4_digitos && <NumeroTarjetaReveal clienteId={c.id} />}
+          {(c.pago?.ultimos_4_digitos || c.pago?.ultimos_4_cuenta) && <NumeroTarjetaReveal clienteId={c.id} />}
           {c.pago?.tiene_data_point && <DataPointReveal clienteId={c.id} />}
           <div className="space-y-3 border-t pt-3">
             {c.evidencias.length === 0 && <p className="text-sm text-muted-foreground">Sin evidencias.</p>}

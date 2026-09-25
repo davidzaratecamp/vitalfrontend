@@ -40,6 +40,7 @@ const ClienteDetallePage = lazy(() => import('@/pages/admin/ClienteDetallePage')
 // abajo) — el archivo sigue existiendo.
 const CatalogosPage = lazy(() => import('@/pages/admin/CatalogosPage'))
 const AdminPostventaPage = lazy(() => import('@/pages/admin/PostventaPage'))
+const PapeleraPage = lazy(() => import('@/pages/admin/PapeleraPage'))
 
 function PageFallback() {
   return (
@@ -104,6 +105,7 @@ export default function App() {
                   AdminShell.tsx. */}
               <Route path="/postventa" element={<AdminPostventaPage />} />
               <Route path="/casos/:id" element={<GestionCasoPage />} />
+              <Route path="/papelera" element={<PapeleraPage />} />
               <Route path="/catalogos" element={<CatalogosPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

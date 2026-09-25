@@ -64,10 +64,10 @@ export function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
     if (valor) return setValor(null)
     try {
       const data = await revelar.mutateAsync()
-      if (!data?.numero_tarjeta) return toast.error('No hay una tarjeta guardada para este cliente')
+      if (!data) return toast.error('No hay datos de pago guardados para este cliente')
       setValor(data)
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'No se pudo revelar el número completo'))
+      toast.error(apiErrorMessage(err, 'No se pudo revelar los datos de pago'))
     }
   }
 
@@ -80,15 +80,27 @@ export function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
     <div className="flex flex-wrap items-center gap-2 pt-1">
       {valor && (
         <span className="max-w-md text-sm">
-          <span className="font-mono">{valor.numero_tarjeta}</span>
-          {valor.marca_tarjeta && ` · ${valor.marca_tarjeta}`}
-          {valor.nombre_titular_tarjeta && ` · ${valor.nombre_titular_tarjeta}`}
-          {vencimiento && ` · Vence ${vencimiento}`}
+          {valor.numero_tarjeta && (
+            <>
+              <span className="font-mono">{valor.numero_tarjeta}</span>
+              {valor.marca_tarjeta && ` · ${valor.marca_tarjeta}`}
+              {valor.nombre_titular_tarjeta && ` · ${valor.nombre_titular_tarjeta}`}
+              {vencimiento && ` · Vence ${vencimiento}`}
+            </>
+          )}
+          {valor.numero_cuenta && (
+            <>
+              {valor.numero_tarjeta && ' · '}
+              {valor.nombre_banco && `${valor.nombre_banco} · `}
+              Cuenta <span className="font-mono">{valor.numero_cuenta}</span>
+              {valor.numero_ruta && ` · Ruta ${valor.numero_ruta}`}
+            </>
+          )}
         </span>
       )}
       <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
         {valor ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        {valor ? 'Ocultar' : 'Ver número completo'}
+        {valor ? 'Ocultar' : 'Ver datos de pago'}
       </Button>
     </div>
   )

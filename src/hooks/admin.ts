@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { DashboardData, ReportePage } from '@/lib/types'
+import type { DashboardData, ReportePage, PapeleraPage } from '@/lib/types'
 
 export interface AdminFilters {
   estado?: string
@@ -25,6 +25,23 @@ export const useReporte = (filters: AdminFilters & { page?: number; pageSize?: n
   useQuery({
     queryKey: ['admin', 'reporte', filters],
     queryFn: async () => (await api.get<ReportePage>('/admin/reporte', { params: filters })).data,
+  })
+
+export interface PapeleraFilters {
+  q?: string
+  agenteId?: number | string
+  empresaId?: number | string
+  desde?: string
+  hasta?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Solo admin (ver admin.routes.js) — supervisor no la ve. */
+export const usePapelera = (filters: PapeleraFilters = {}) =>
+  useQuery({
+    queryKey: ['admin', 'papelera', filters],
+    queryFn: async () => (await api.get<PapeleraPage>('/admin/papelera', { params: filters })).data,
   })
 
 export async function descargarReporteCsv(filters: AdminFilters = {}) {
