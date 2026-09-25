@@ -1,4 +1,4 @@
-import { Eye, Lock } from 'lucide-react'
+import { Eye, Lock, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { abrirEvidencia } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { num } from '@/lib/analyticsFormat'
 import { fmtDate } from '@/lib/dateFormat'
+import { cn } from '@/lib/utils'
 import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL, METODO_PAGO_LABEL } from '@/lib/clienteConstants'
 import type { ClienteDetalle } from '@/lib/types'
 
@@ -21,6 +22,16 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+/** Pastilla "Actualizado" — se usa junto al título de una sección cuando
+ * `seccionesActualizadas` la marca (ver lib/cambiosRecientes.ts). */
+function BadgeActualizado() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+      <Sparkles className="size-3" /> Actualizado
+    </span>
+  )
+}
+
 async function verEvidencia(id: number, nombreArchivo: string) {
   try {
     await abrirEvidencia(id, nombreArchivo)
@@ -29,13 +40,22 @@ async function verEvidencia(id: number, nombreArchivo: string) {
   }
 }
 
-export function ClienteResumen({ c }: { c: ClienteDetalle }) {
+/**
+ * `seccionesActualizadas` (opcional) resalta con un borde ámbar + una
+ * pastilla "Actualizado" las tarjetas que cambiaron después de cierta
+ * fecha — hoy solo lo usa la vista de Postventa de admin (2026-09-26, "que
+ * se aparezcan subrayados o resaltados los datos que se cambiaron"), ver
+ * lib/cambiosRecientes.ts. Sin este prop, la tarjeta se ve exactamente
+ * igual que siempre.
+ */
+export function ClienteResumen({ c, seccionesActualizadas }: { c: ClienteDetalle; seccionesActualizadas?: Set<string> }) {
+  const marcada = (key: string) => !!seccionesActualizadas?.has(key)
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
+      <Card className={cn(marcada('titular') && 'border-amber-500/50 ring-1 ring-amber-500/30')}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between gap-2 text-base">
-            Titular
+            <span className="flex items-center gap-2">Titular {marcada('titular') && <BadgeActualizado />}</span>
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                 c.solicita_cobertura
@@ -84,8 +104,10 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
       </Card>
 
       <div className="space-y-4">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Cónyuge y dependientes</CardTitle></CardHeader>
+        <Card className={cn(marcada('dependientes') && 'border-amber-500/50 ring-1 ring-amber-500/30')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">Cónyuge y dependientes {marcada('dependientes') && <BadgeActualizado />}</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {c.dependientes.length === 0 && <p className="text-sm text-muted-foreground">Sin cónyuge ni dependientes.</p>}
             {c.dependientes.map((d) => (
@@ -112,8 +134,10 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle className="text-base">Ingresos</CardTitle></CardHeader>
+        <Card className={cn(marcada('ingresos') && 'border-amber-500/50 ring-1 ring-amber-500/30')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">Ingresos {marcada('ingresos') && <BadgeActualizado />}</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-1">
             {c.ingresos.map((i) => (
               <Row
@@ -127,8 +151,10 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Plan de salud cotizado</CardTitle></CardHeader>
+      <Card className={cn(marcada('plan') && 'border-amber-500/50 ring-1 ring-amber-500/30')}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">Plan de salud cotizado {marcada('plan') && <BadgeActualizado />}</CardTitle>
+        </CardHeader>
         <CardContent className="divide-y">
           {c.plan_salud ? (
             <>
@@ -161,8 +187,10 @@ export function ClienteResumen({ c }: { c: ClienteDetalle }) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Pago y evidencias</CardTitle></CardHeader>
+      <Card className={cn(marcada('pago') && 'border-amber-500/50 ring-1 ring-amber-500/30')}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">Pago y evidencias {marcada('pago') && <BadgeActualizado />}</CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
           <div className="divide-y">
             <Row label="Método de pago" value={c.pago ? METODO_PAGO_LABEL[c.pago.metodo] : null} />

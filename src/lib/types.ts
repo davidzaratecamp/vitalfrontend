@@ -127,6 +127,9 @@ export interface Dependiente {
   fecha_nacimiento: string
   social: string | null
   estatus_migratorio: string
+  /** El backend ya lo manda (SELECT *), solo faltaba declararlo — usado
+   * para "qué se actualizó" en la vista de postventa de admin (2026-09-26). */
+  updated_at?: string
 }
 
 export interface Ingreso {
@@ -138,6 +141,8 @@ export interface Ingreso {
   // semanal*52 — semanal queda opcional/histórico, ya no se pide.
   ingresos_semanales: string | null
   ingresos_anuales: string
+  /** Ver Dependiente.updated_at. */
+  updated_at?: string
 }
 
 export interface PlanSalud {
@@ -194,6 +199,7 @@ export interface InformacionPago {
   /** true si ya hay un "Data Point" guardado — el valor en sí nunca viaja
    * acá, ni siquiera al agente que lo escribió. Ver DataPointCompleto. */
   tiene_data_point: boolean
+  updated_at: string
 }
 
 /** Solo BackOffice/Admin — GET /clientes/:id/pago/numero-completo, queda

@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, History, Save, CircleCheck, Forward, PhoneCall } from 'lucide-react'
+import { User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, History, Save, CircleCheck, Forward, PhoneCall, Sparkles } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
+import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { ObservacionesCard } from '@/components/common/ObservacionesCard'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { CopyableId } from '@/components/common/CopyableId'
+import { SoporteCasoPostventaCard } from '@/components/casosPostventa/SoporteCasoPostventaCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,13 +23,13 @@ import { IngresosStep } from '@/components/agente/steps/IngresosStep'
 import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
-import { SoporteCasoPostventaCard } from '@/components/casosPostventa/SoporteCasoPostventaCard'
 import { NumeroTarjetaReveal, DataPointReveal } from '@/components/common/DatosTarjetaReveal'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias } from '@/hooks/clientes'
 import { useCasoPostventa, useHistorialCasoPostventa, useActualizarCasoPostventa } from '@/hooks/casosPostventa'
 import { apiErrorMessage } from '@/lib/api'
 import { TIPO_CASO_POSTVENTA_LABEL, TIPO_GESTION_POSTVENTA, TIPO_GESTION_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_COLOR } from '@/lib/casosPostventaConstants'
 import { fmtDateTime } from '@/lib/dateFormat'
+import { calcularCambiosRecientes } from '@/lib/cambiosRecientes'
 import { useAuthStore } from '@/stores/auth'
 
 /**
@@ -71,6 +73,15 @@ export default function GestionCasoPage() {
   const editable = activoParaMi
   const ingresoTitularOk = ingresos.data?.rows.some((r) => r.dependiente_id == null)
   const tipoGestionAEnviar = tipoGestion || caso.tipo_gestion || undefined
+
+  // Admin ve un resumen de solo lectura (como en Reporte consolidado), no
+  // el formulario de 7 pasos — "un montón de formularios que él no va a
+  // abrir todos" (2026-09-26, pedido del usuario). Los "cambios recientes"
+  // son la mejor aproximación real a qué se tocó durante este caso, sin un
+  // log de campo por campo — ver lib/cambiosRecientes.ts.
+  const esAdmin = role === 'admin'
+  const cambios = esAdmin ? calcularCambiosRecientes(cliente, caso.created_at) : []
+  const seccionesActualizadas = new Set(cambios.map((c) => c.seccion))
 
   async function guardar(estado: string) {
     try {
@@ -123,102 +134,135 @@ export default function GestionCasoPage() {
         </CardContent>
       </Card>
 
-      <ObservacionesCard clienteId={clienteId} observaciones={cliente.observaciones} />
+      {esAdmin ? (
+        <>
+          {/* "Cambios recientes" — no hay un log campo por campo en el
+              sistema, esto compara el updated_at de cada sección contra
+              cuándo se abrió el caso (ver lib/cambiosRecientes.ts). Mismas
+              secciones quedan resaltadas más abajo en el resumen. */}
+          {cambios.length > 0 && (
+            <Card className="border-amber-500/40 bg-amber-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-amber-700 dark:text-amber-400">
+                  <Sparkles className="size-4" /> Cambios desde que se abrió este caso
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5">
+                {cambios.map((cmb, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span>{cmb.detalle}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{fmtDateTime(cmb.cuando)}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
-      <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
-        <AccordionItem value="titular">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><User className="size-4" /> 1 · Datos personales del titular</span>
-              <StepStatus status="completo" />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent><TitularStep cliente={cliente} editable={editable} /></AccordionContent>
-        </AccordionItem>
+          {/* Mismo resumen que ve admin en Reporte consolidado
+              (ClienteDetallePage.tsx) — nada de formularios de 7 pasos acá,
+              admin solo supervisa (2026-09-26, pedido del usuario: "un
+              montón de formularios que él no va a abrir todos"). Ya incluye
+              observaciones y la carta de firma. */}
+          <ClienteResumen c={cliente} seccionesActualizadas={seccionesActualizadas} />
 
-        <AccordionItem value="conyuge">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><HeartHandshake className="size-4" /> 2 · Cónyuge</span>
-              <StepStatus status={conyuge.data ? 'completo' : 'vacio'} />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent><ConyugeStep clienteId={clienteId} editable={editable} /></AccordionContent>
-        </AccordionItem>
+          <SoporteCasoPostventaCard casoId={caso.id} editable={false} />
+        </>
+      ) : (
+        <>
+          <ObservacionesCard clienteId={clienteId} observaciones={cliente.observaciones} />
 
-        <AccordionItem value="dependientes">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><Baby className="size-4" /> 3 · Dependientes</span>
-              <StepStatus status={dependientes.data?.length ? 'completo' : 'vacio'} />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent><DependientesStep clienteId={clienteId} editable={editable} /></AccordionContent>
-        </AccordionItem>
+          <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
+            <AccordionItem value="titular">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><User className="size-4" /> 1 · Datos personales del titular</span>
+                  <StepStatus status="completo" />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent><TitularStep cliente={cliente} editable={editable} /></AccordionContent>
+            </AccordionItem>
 
-        <AccordionItem value="ingresos">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><DollarSign className="size-4" /> 4 · Ingresos</span>
-              <StepStatus status={ingresoTitularOk ? 'completo' : 'vacio'} />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent><IngresosStep clienteId={clienteId} editable={editable} /></AccordionContent>
-        </AccordionItem>
+            <AccordionItem value="conyuge">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><HeartHandshake className="size-4" /> 2 · Cónyuge</span>
+                  <StepStatus status={conyuge.data ? 'completo' : 'vacio'} />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent><ConyugeStep clienteId={clienteId} editable={editable} /></AccordionContent>
+            </AccordionItem>
 
-        <AccordionItem value="plan">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><Users className="size-4" /> 5 · Plan de salud cotizado</span>
-              <StepStatus status={plan.data ? 'completo' : 'vacio'} />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent><PlanSaludStep clienteId={clienteId} editable={editable} estado={cliente.estado_us} /></AccordionContent>
-        </AccordionItem>
+            <AccordionItem value="dependientes">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><Baby className="size-4" /> 3 · Dependientes</span>
+                  <StepStatus status={dependientes.data?.length ? 'completo' : 'vacio'} />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent><DependientesStep clienteId={clienteId} editable={editable} /></AccordionContent>
+            </AccordionItem>
 
-        <AccordionItem value="pago">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><CreditCard className="size-4" /> 6 · Información de pago</span>
-              <StepStatus status={pago.data ? 'completo' : 'vacio'} />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="space-y-3">
-            <PagoStep clienteId={clienteId} editable={editable} primaEsCero={plan.data != null && Number(plan.data.valor_prima) === 0} />
-            {/* Antes solo existían en ClienteResumen.tsx — un caso de
-                postventa (donde se revisan clientes YA aprobados, el
-                escenario típico para pedir estos datos) no tenía forma de
-                pedirlos (2026-09-25, reportado por el usuario). */}
-            {(pago.data?.ultimos_4_digitos || pago.data?.ultimos_4_cuenta || pago.data?.tiene_data_point) && (
-              <div className="flex flex-wrap gap-3 border-t pt-3">
-                {(pago.data?.ultimos_4_digitos || pago.data?.ultimos_4_cuenta) && <NumeroTarjetaReveal clienteId={clienteId} />}
-                {pago.data?.tiene_data_point && <DataPointReveal clienteId={clienteId} />}
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            <AccordionItem value="ingresos">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><DollarSign className="size-4" /> 4 · Ingresos</span>
+                  <StepStatus status={ingresoTitularOk ? 'completo' : 'vacio'} />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent><IngresosStep clienteId={clienteId} editable={editable} /></AccordionContent>
+            </AccordionItem>
 
-      <FirmaCartaCard
-        clienteId={clienteId}
-        correoCliente={cliente.correo_electronico}
-        telefonoCliente={cliente.phone_1}
-        whatsappCliente={cliente.whatsapp}
-      />
+            <AccordionItem value="plan">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><Users className="size-4" /> 5 · Plan de salud cotizado</span>
+                  <StepStatus status={plan.data ? 'completo' : 'vacio'} />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent><PlanSaludStep clienteId={clienteId} editable={editable} estado={cliente.estado_us} /></AccordionContent>
+            </AccordionItem>
 
-      <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
-        <AccordionItem value="evidencias">
-          <AccordionTrigger>
-            <span className="flex flex-1 items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><FileText className="size-4" /> 7 · Evidencias</span>
-              <StepStatus status={evidencias.data?.length ? 'completo' : 'vacio'} />
-            </span>
-          </AccordionTrigger>
-          <AccordionContent><EvidenciasStep clienteId={clienteId} editable={editable} /></AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            <AccordionItem value="pago">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><CreditCard className="size-4" /> 6 · Información de pago</span>
+                  <StepStatus status={pago.data ? 'completo' : 'vacio'} />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-3">
+                <PagoStep clienteId={clienteId} editable={editable} primaEsCero={plan.data != null && Number(plan.data.valor_prima) === 0} />
+                {(pago.data?.ultimos_4_digitos || pago.data?.ultimos_4_cuenta || pago.data?.tiene_data_point) && (
+                  <div className="flex flex-wrap gap-3 border-t pt-3">
+                    {(pago.data?.ultimos_4_digitos || pago.data?.ultimos_4_cuenta) && <NumeroTarjetaReveal clienteId={clienteId} />}
+                    {pago.data?.tiene_data_point && <DataPointReveal clienteId={clienteId} />}
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
-      <SoporteCasoPostventaCard casoId={caso.id} editable={editable} />
+          <FirmaCartaCard
+            clienteId={clienteId}
+            correoCliente={cliente.correo_electronico}
+            telefonoCliente={cliente.phone_1}
+            whatsappCliente={cliente.whatsapp}
+          />
+
+          <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
+            <AccordionItem value="evidencias">
+              <AccordionTrigger>
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span className="flex items-center gap-2"><FileText className="size-4" /> 7 · Evidencias</span>
+                  <StepStatus status={evidencias.data?.length ? 'completo' : 'vacio'} />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent><EvidenciasStep clienteId={clienteId} editable={editable} /></AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <SoporteCasoPostventaCard casoId={caso.id} editable={editable} />
+        </>
+      )}
 
       {editable && (
         <Card>
