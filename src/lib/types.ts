@@ -309,9 +309,20 @@ export interface ClienteDetalle extends Cliente {
 export interface DashboardData {
   total: number
   tasa_aprobacion: number | null
+  /** Días promedio entre "enviado a BackOffice" (submitted_at) y la
+   * transición real a 'aprobado' en el historial — null si nunca hubo uno. */
+  dias_promedio_aprobacion: number | null
   por_estado: Record<EstadoCliente, number>
   por_agente: { agente_id: number | null; agente_nombre: string; total: number; aprobados: number }[]
-  tendencia: { dia: string; calls: number }[]
+  tendencia: { dia: string; registros: number; aprobados: number }[]
+  por_origen: { origen_venta: string; total: number }[]
+  por_empresa: { empresa_id: number | null; empresa_nombre: string; total: number; aprobados: number }[]
+  aseguradoras: { aseguradora: string; total: number }[]
+  firmas: { estado: EstadoFirma; total: number }[]
+  postventa: {
+    por_tipo: { tipo_caso: string; total: number }[]
+    por_estado: { estado: EstadoCasoPostventa; total: number }[]
+  }
 }
 
 export interface ReportePage {
