@@ -25,6 +25,15 @@ export interface User {
   empresa_id?: number | null
   empresa_nombre?: string | null
   created_at?: string
+  /** Permiso individual (2026-09-25), no de rol — casi nadie lo tiene.
+   * Habilita "Ver número completo"/"Ver Data Point" en ClienteResumen.tsx;
+   * el backend también lo exige (assertPuedeVerNumeroTarjeta/
+   * assertPuedeVerDataPoint en clientes.service.js). Para backoffice de
+   * Vital Asiste es obligatorio para cualquiera de los dos; para backoffice
+   * de otra empresa (Vital) solo hace falta para el Data Point — el número
+   * completo sigue abierto ahí sin este permiso. Admin no lo necesita,
+   * siempre puede ver ambos. */
+  puede_ver_datos_pago?: boolean
 }
 
 export type EstadoFirma = 'pending' | 'viewed' | 'signed' | 'expired' | 'failed'

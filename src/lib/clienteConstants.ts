@@ -2,6 +2,13 @@
 // para no repetir la falla del CRM original (mismo catálogo escrito distinto
 // en cada formulario).
 
+// id de 'Vital Asiste' en `empresas` (Vital=1, Vital Asiste=2, fijo desde
+// que se creó la tabla) — un backoffice solo ve clientes de su propia
+// empresa, así que `user.empresa_id` alcanza para saber si el cliente que
+// está viendo es de Vital Asiste. Ver ClienteResumen.tsx (permiso de
+// datos de tarjeta) y clientes.constants.js#EMPRESA_VITAL_ASISTE_ID.
+export const EMPRESA_VITAL_ASISTE_ID = 2
+
 export const ESTATUS_MIGRATORIO = [
   'RESIDENTE',
   'CIUDADANO',
