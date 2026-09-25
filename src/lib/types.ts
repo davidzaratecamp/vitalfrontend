@@ -50,7 +50,12 @@ export interface FirmaDocumento {
   updated_at: string
 }
 
-export type EstadoCliente = 'borrador' | 'pendiente_backoffice' | 'aprobado' | 'rechazado_backoffice'
+export type EstadoCliente =
+  | 'borrador'
+  | 'pendiente_backoffice'
+  | 'pendiente_llamada_tripartita'
+  | 'aprobado'
+  | 'rechazado_backoffice'
 
 export interface Aseguradora {
   id: number

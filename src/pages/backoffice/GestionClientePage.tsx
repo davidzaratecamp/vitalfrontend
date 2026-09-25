@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { CheckCircle2, XCircle, History } from 'lucide-react'
+import { CheckCircle2, XCircle, History, PhoneCall } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCliente } from '@/hooks/clientes'
 import { useAseguradoras } from '@/hooks/catalogos'
-import { useCompletar, useRechazar, useHistorialBackoffice } from '@/hooks/backoffice'
+import { useCompletar, useRechazar, useHistorialBackoffice, usePendienteTripartita } from '@/hooks/backoffice'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, ESTADO_PRIMA } from '@/lib/clienteConstants'
 import { fmtDateTime } from '@/lib/dateFormat'
@@ -27,10 +27,13 @@ export default function GestionClientePage() {
   const { data: historial } = useHistorialBackoffice(id)
   const completar = useCompletar(id ?? 0)
   const rechazar = useRechazar(id ?? 0)
+  const marcarTripartita = usePendienteTripartita(id ?? 0)
 
   const [form, setForm] = useState({ aseguradora_id: '', nombre_plan: '', deducible: '', gasto_max_bolsillo: '', npn: '', estado_prima: '' })
   const [motivo, setMotivo] = useState('')
   const [confirmRechazo, setConfirmRechazo] = useState(false)
+  const [motivoTripartita, setMotivoTripartita] = useState('')
+  const [confirmTripartita, setConfirmTripartita] = useState(false)
 
   // El agente ya cargó estos datos en el Paso 5 — no hace falta que
   // BackOffice los vuelva a escribir, solo revisarlos. El NPN se
@@ -52,7 +55,13 @@ export default function GestionClientePage() {
 
   if (isLoading || !cliente) return <Skeleton className="h-96 rounded-xl" />
 
-  const pendiente = cliente.estado === 'pendiente_backoffice'
+  // El caso se puede cerrar (completar/rechazar) tanto desde la cola normal
+  // como desde "pendiente llamada tripartita" — ese estado es solo una
+  // parada intermedia, no le quita a BackOffice la posibilidad de cerrarlo.
+  const pendiente = cliente.estado === 'pendiente_backoffice' || cliente.estado === 'pendiente_llamada_tripartita'
+  // Pasar a "pendiente llamada tripartita" solo tiene sentido DESDE la cola
+  // normal (no tiene caso volver a marcarlo si ya está ahí).
+  const puedeMarcarTripartita = cliente.estado === 'pendiente_backoffice'
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   async function onCompletar(e: React.FormEvent) {
@@ -78,6 +87,17 @@ export default function GestionClientePage() {
       await rechazar.mutateAsync(motivo)
       toast.success('Registro rechazado, vuelve al agente')
       setConfirmRechazo(false)
+      navigate('/')
+    } catch (err) {
+      toast.error(apiErrorMessage(err))
+    }
+  }
+
+  async function onMarcarTripartita() {
+    try {
+      await marcarTripartita.mutateAsync(motivoTripartita || undefined)
+      toast.success('Marcado como pendiente llamada tripartita')
+      setConfirmTripartita(false)
       navigate('/')
     } catch (err) {
       toast.error(apiErrorMessage(err))
@@ -145,6 +165,11 @@ export default function GestionClientePage() {
                 <Button type="button" variant="destructive" onClick={() => setConfirmRechazo(true)}>
                   <XCircle className="size-4" /> Rechazar
                 </Button>
+                {puedeMarcarTripartita && (
+                  <Button type="button" variant="outline" onClick={() => setConfirmTripartita(true)}>
+                    <PhoneCall className="size-4" /> Pendiente llamada tripartita
+                  </Button>
+                )}
               </div>
             </form>
 
@@ -157,6 +182,19 @@ export default function GestionClientePage() {
                     {rechazar.isPending ? 'Rechazando...' : 'Confirmar rechazo'}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setConfirmRechazo(false)}>Cancelar</Button>
+                </div>
+              </div>
+            )}
+
+            {confirmTripartita && (
+              <div className="space-y-2 rounded-lg border border-sky-500/30 bg-sky-500/5 p-4">
+                <label className="text-sm font-medium">Nota (opcional)</label>
+                <Textarea value={motivoTripartita} onChange={(e) => setMotivoTripartita(e.target.value)} rows={3} placeholder="Qué falta coordinar en la llamada..." />
+                <div className="flex gap-2">
+                  <Button size="sm" disabled={marcarTripartita.isPending} onClick={onMarcarTripartita}>
+                    {marcarTripartita.isPending ? 'Guardando...' : 'Confirmar'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setConfirmTripartita(false)}>Cancelar</Button>
                 </div>
               </div>
             )}

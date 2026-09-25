@@ -45,20 +45,25 @@ export const METODO_PAGO_LABEL: Record<string, string> = {
 
 // Categorías del Paso 7 (evidencias) — cada una es su propio casillero en
 // vez de una lista plana de archivos sin etiquetar. poliza/
-// estatus_migratorio/licencia son obligatorias para poder finalizar; social
-// es la única opcional. El orden acá es el orden en que se muestran.
-export const CATEGORIA_EVIDENCIA = ['poliza', 'estatus_migratorio', 'licencia', 'social'] as const
+// estatus_migratorio/licencia son obligatorias para poder finalizar;
+// social y carta_cms_anterior son opcionales (carta_cms_anterior es para
+// postventa: cuando el cliente pide actualizar su póliza, se guarda la
+// carta vieja antes de hacer firmar la nueva). El orden acá es el orden en
+// que se muestran.
+export const CATEGORIA_EVIDENCIA = ['poliza', 'estatus_migratorio', 'licencia', 'social', 'carta_cms_anterior'] as const
 export const CATEGORIA_EVIDENCIA_LABEL: Record<string, string> = {
   poliza: 'Póliza',
   estatus_migratorio: 'Estatus migratorio',
   licencia: 'Licencia',
   social: 'Social',
+  carta_cms_anterior: 'Carta CMS anterior',
 }
 export const CATEGORIA_EVIDENCIA_OBLIGATORIA = ['poliza', 'estatus_migratorio', 'licencia'] as const
 
 export const ESTADO_CLIENTE_LABEL: Record<string, string> = {
   borrador: 'Borrador',
   pendiente_backoffice: 'Pendiente BackOffice',
+  pendiente_llamada_tripartita: 'Pendiente llamada tripartita',
   aprobado: 'Aprobado',
   rechazado_backoffice: 'Rechazado por BackOffice',
 }
@@ -66,6 +71,7 @@ export const ESTADO_CLIENTE_LABEL: Record<string, string> = {
 export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
   borrador: 'bg-secondary text-secondary-foreground',
   pendiente_backoffice: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  pendiente_llamada_tripartita: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
   aprobado: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   rechazado_backoffice: 'bg-red-500/10 text-red-600 dark:text-red-400',
 }

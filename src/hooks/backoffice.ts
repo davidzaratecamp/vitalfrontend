@@ -48,6 +48,18 @@ export function useRechazar(id: string | number) {
   })
 }
 
+/** Pasa el caso de "Pendiente BackOffice" a "Pendiente llamada tripartita"
+ * — BackOffice ya lo gestionó pero necesita coordinar una llamada de 3
+ * (cliente + agente + BackOffice) antes de aprobar o rechazar. */
+export function usePendienteTripartita(id: string | number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (motivo?: string) =>
+      (await api.put<Cliente>(`/backoffice/clientes/${id}/pendiente-tripartita`, { motivo })).data,
+    onSuccess: () => invalidateAll(qc, id),
+  })
+}
+
 export function useObservacionBackoffice(id: string | number) {
   const qc = useQueryClient()
   return useMutation({

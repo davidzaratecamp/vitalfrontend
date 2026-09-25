@@ -29,6 +29,7 @@ const CompletadosPage = lazy(() => import('@/pages/backoffice/CompletadosPage'))
 const RechazadosBackofficePage = lazy(() => import('@/pages/backoffice/RechazadosPage'))
 const GestionClientePage = lazy(() => import('@/pages/backoffice/GestionClientePage'))
 const PostventaPage = lazy(() => import('@/pages/backoffice/PostventaPage'))
+const PendienteTripartitaPage = lazy(() => import('@/pages/backoffice/PendienteTripartitaPage'))
 
 // Admin
 const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'))
@@ -79,6 +80,7 @@ export default function App() {
           ) : role === 'backoffice' ? (
             <Route element={<BackofficeShell />}>
               <Route path="/" element={<ColaPage />} />
+              <Route path="/pendiente-tripartita" element={<PendienteTripartitaPage />} />
               <Route path="/completados" element={<CompletadosPage />} />
               <Route path="/rechazados" element={<RechazadosBackofficePage />} />
               <Route path="/clientes/:id" element={<GestionClientePage />} />
