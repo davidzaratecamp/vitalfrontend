@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Search, UserRound, TriangleAlert } from 'lucide-react'
+import { Search, UserRound, TriangleAlert, Forward } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -37,6 +37,11 @@ export default function ValidarClientePage() {
 
   const listoParaBuscar = telefono.length >= 7
   const listoParaCrear = !!tipoCaso
+  // Si el tipo de caso elegido es "de BackOffice" (catálogo, ver
+  // casosPostventaConstants.ts), el caso nace directo escalado — no hace
+  // falta que el agente lo gestione primero para recién ahí escalarlo
+  // (2026-09-25, pedido del usuario).
+  const esParaBackoffice = TIPO_CASO_POSTVENTA.find((t) => t.valor === tipoCaso)?.responsable === 'backoffice'
 
   async function onValidar() {
     try {
@@ -56,7 +61,7 @@ export default function ValidarClientePage() {
         telefono_contacto: telefono,
         observacion_inicial: observacion || undefined,
       })
-      toast.success(`Caso #${caso.id} creado`)
+      toast.success(caso.estado === 'escalado_backoffice' ? `Caso #${caso.id} enviado a BackOffice` : `Caso #${caso.id} creado`)
       navigate(`/postventa/casos/${caso.id}`)
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo crear el caso'))
@@ -100,7 +105,9 @@ export default function ValidarClientePage() {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Es informativo — igual puedes escalarlo a BackOffice más adelante si hace falta, sin importar cuál elijas acá.
+            {esParaBackoffice
+              ? 'Este tipo de caso se envía directo a BackOffice — no queda en tu cola.'
+              : 'Queda en tu cola — si después hace falta, lo puedes escalar a BackOffice desde el caso.'}
           </p>
         </div>
 
@@ -142,8 +149,16 @@ export default function ValidarClientePage() {
                     </p>
                   </div>
                 </div>
-                <Button type="button" size="sm" className="shrink-0" disabled={!listoParaCrear || crear.isPending} onClick={() => onElegir(c.id)}>
-                  Seleccionar
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={esParaBackoffice ? 'secondary' : 'default'}
+                  className="shrink-0"
+                  disabled={!listoParaCrear || crear.isPending}
+                  onClick={() => onElegir(c.id)}
+                >
+                  {esParaBackoffice && <Forward className="size-4" />}
+                  {esParaBackoffice ? 'Enviar al BackOffice' : 'Seleccionar'}
                 </Button>
               </div>
             ))}
