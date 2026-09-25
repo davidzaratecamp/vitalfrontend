@@ -6,6 +6,7 @@ import { useDataPointCompleto, useNumeroTarjetaCompleto } from '@/hooks/clientes
 import { apiErrorMessage } from '@/lib/api'
 import { EMPRESA_VITAL_ASISTE_ID } from '@/lib/clienteConstants'
 import { useAuthStore } from '@/stores/auth'
+import type { NumeroTarjetaCompleto } from '@/lib/types'
 
 // Se oculta sola a los 20s — no se queda en pantalla indefinidamente
 // después de revelarla.
@@ -49,7 +50,7 @@ export function usePuedeVerNumeroTarjeta() {
 export function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
   const puedeVer = usePuedeVerNumeroTarjeta()
   const revelar = useNumeroTarjetaCompleto(clienteId)
-  const [valor, setValor] = useState<{ numero: string; marca: string | null } | null>(null)
+  const [valor, setValor] = useState<NumeroTarjetaCompleto | null>(null)
 
   useEffect(() => {
     if (!valor) return
@@ -64,15 +65,27 @@ export function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
     try {
       const data = await revelar.mutateAsync()
       if (!data?.numero_tarjeta) return toast.error('No hay una tarjeta guardada para este cliente')
-      setValor({ numero: data.numero_tarjeta, marca: data.marca_tarjeta })
+      setValor(data)
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo revelar el número completo'))
     }
   }
 
+  const vencimiento =
+    valor?.fecha_expiracion_mes && valor?.fecha_expiracion_ano
+      ? `${String(valor.fecha_expiracion_mes).padStart(2, '0')}/${valor.fecha_expiracion_ano}`
+      : null
+
   return (
-    <div className="flex items-center gap-2 pt-1">
-      {valor && <span className="max-w-xs truncate font-mono text-sm">{valor.numero}{valor.marca ? ` · ${valor.marca}` : ''}</span>}
+    <div className="flex flex-wrap items-center gap-2 pt-1">
+      {valor && (
+        <span className="max-w-md text-sm">
+          <span className="font-mono">{valor.numero_tarjeta}</span>
+          {valor.marca_tarjeta && ` · ${valor.marca_tarjeta}`}
+          {valor.nombre_titular_tarjeta && ` · ${valor.nombre_titular_tarjeta}`}
+          {vencimiento && ` · Vence ${vencimiento}`}
+        </span>
+      )}
       <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
         {valor ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
         {valor ? 'Ocultar' : 'Ver número completo'}

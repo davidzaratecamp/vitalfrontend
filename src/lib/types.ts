@@ -195,6 +195,11 @@ export interface InformacionPago {
 export interface NumeroTarjetaCompleto {
   numero_tarjeta: string
   marca_tarjeta: MarcaTarjeta | null
+  /** "Todos los datos de la tarjeta" (2026-09-25) — junto con el número.
+   * El CVV nunca se incluye: no se guarda, en ningún lado. */
+  nombre_titular_tarjeta: string | null
+  fecha_expiracion_mes: number | null
+  fecha_expiracion_ano: number | null
 }
 
 /** Solo BackOffice/Admin — GET /clientes/:id/pago/data-point. */
