@@ -1,21 +1,16 @@
-import { useEffect, useState } from 'react'
-import { Eye, EyeOff, Lock } from 'lucide-react'
+import { Eye, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FirmaCartaCard } from './FirmaCartaCard'
 import { ObservacionesCard } from './ObservacionesCard'
-import { abrirEvidencia, useDataPointCompleto, useNumeroTarjetaCompleto } from '@/hooks/clientes'
+import { NumeroTarjetaReveal, DataPointReveal } from './DatosTarjetaReveal'
+import { abrirEvidencia } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
 import { num } from '@/lib/analyticsFormat'
 import { fmtDate } from '@/lib/dateFormat'
-import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL, METODO_PAGO_LABEL, EMPRESA_VITAL_ASISTE_ID } from '@/lib/clienteConstants'
-import { useAuthStore } from '@/stores/auth'
+import { CATEGORIA_EVIDENCIA, CATEGORIA_EVIDENCIA_LABEL, METODO_PAGO_LABEL } from '@/lib/clienteConstants'
 import type { ClienteDetalle } from '@/lib/types'
-
-// Se oculta sola a los 20s — no se queda en pantalla indefinidamente
-// después de revelarla.
-const OCULTAR_TRAS_MS = 20_000
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -32,103 +27,6 @@ async function verEvidencia(id: number, nombreArchivo: string) {
   } catch (err) {
     toast.error(apiErrorMessage(err, 'No se pudo abrir el archivo'))
   }
-}
-
-/**
- * Backoffice solo ve clientes de su propia empresa (assertAccesoCliente en
- * el backend) — así que `user.empresa_id` alcanza para saber si ESTE
- * cliente es de Vital Asiste, sin tener que exponer la empresa del cliente
- * acá. Mismo criterio que assertPuedeVerNumeroTarjeta/
- * assertPuedeVerDataPoint en clientes.service.js (backend):
- * - Data Point: nunca estuvo abierto a nadie — hace falta el permiso
- *   individual siempre, en cualquier empresa (o ser admin).
- * - Número completo: en Vital Asiste hace falta el mismo permiso; en
- *   cualquier otra empresa (Vital, por ahora) sigue abierto sin él, como
- *   siempre.
- */
-function usePuedeVerDataPoint() {
-  const role = useAuthStore((s) => s.user?.role)
-  const puedeVerDatosPago = useAuthStore((s) => s.user?.puede_ver_datos_pago)
-  return role === 'admin' || !!puedeVerDatosPago
-}
-
-function usePuedeVerNumeroTarjeta() {
-  const role = useAuthStore((s) => s.user?.role)
-  const empresaId = useAuthStore((s) => s.user?.empresa_id)
-  const puedeVerDatosPago = useAuthStore((s) => s.user?.puede_ver_datos_pago)
-  if (role === 'admin') return true
-  if (empresaId === EMPRESA_VITAL_ASISTE_ID) return !!puedeVerDatosPago
-  return true
-}
-
-function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
-  const puedeVer = usePuedeVerNumeroTarjeta()
-  const revelar = useNumeroTarjetaCompleto(clienteId)
-  const [valor, setValor] = useState<{ numero: string; marca: string | null } | null>(null)
-
-  useEffect(() => {
-    if (!valor) return
-    const t = setTimeout(() => setValor(null), OCULTAR_TRAS_MS)
-    return () => clearTimeout(t)
-  }, [valor])
-
-  if (!puedeVer) return null
-
-  async function toggle() {
-    if (valor) return setValor(null)
-    try {
-      const data = await revelar.mutateAsync()
-      if (!data?.numero_tarjeta) return toast.error('No hay una tarjeta guardada para este cliente')
-      setValor({ numero: data.numero_tarjeta, marca: data.marca_tarjeta })
-    } catch (err) {
-      toast.error(apiErrorMessage(err, 'No se pudo revelar el número completo'))
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2 pt-1">
-      {valor && <span className="max-w-xs truncate font-mono text-sm">{valor.numero}{valor.marca ? ` · ${valor.marca}` : ''}</span>}
-      <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
-        {valor ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        {valor ? 'Ocultar' : 'Ver número completo'}
-      </Button>
-    </div>
-  )
-}
-
-function DataPointReveal({ clienteId }: { clienteId: number }) {
-  const puedeVer = usePuedeVerDataPoint()
-  const revelar = useDataPointCompleto(clienteId)
-  const [valor, setValor] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!valor) return
-    const t = setTimeout(() => setValor(null), OCULTAR_TRAS_MS)
-    return () => clearTimeout(t)
-  }, [valor])
-
-  if (!puedeVer) return null
-
-  async function toggle() {
-    if (valor) return setValor(null)
-    try {
-      const data = await revelar.mutateAsync()
-      if (!data.data_point) return toast.error('No hay un Data Point guardado para este cliente')
-      setValor(data.data_point)
-    } catch (err) {
-      toast.error(apiErrorMessage(err, 'No se pudo revelar el Data Point'))
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2 pt-1">
-      {valor && <span className="max-w-xs truncate text-sm">{valor}</span>}
-      <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={revelar.isPending}>
-        {valor ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        {valor ? 'Ocultar' : 'Ver Data Point'}
-      </Button>
-    </div>
-  )
 }
 
 export function ClienteResumen({ c }: { c: ClienteDetalle }) {

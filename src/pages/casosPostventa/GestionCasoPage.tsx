@@ -22,6 +22,7 @@ import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
 import { SoporteCasoPostventaCard } from '@/components/casosPostventa/SoporteCasoPostventaCard'
+import { NumeroTarjetaReveal, DataPointReveal } from '@/components/common/DatosTarjetaReveal'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias } from '@/hooks/clientes'
 import { useCasoPostventa, useHistorialCasoPostventa, useActualizarCasoPostventa } from '@/hooks/casosPostventa'
 import { apiErrorMessage } from '@/lib/api'
@@ -182,8 +183,18 @@ export default function GestionCasoPage() {
               <StepStatus status={pago.data ? 'completo' : 'vacio'} />
             </span>
           </AccordionTrigger>
-          <AccordionContent>
+          <AccordionContent className="space-y-3">
             <PagoStep clienteId={clienteId} editable={editable} primaEsCero={plan.data != null && Number(plan.data.valor_prima) === 0} />
+            {/* Antes solo existían en ClienteResumen.tsx — un caso de
+                postventa (donde se revisan clientes YA aprobados, el
+                escenario típico para pedir estos datos) no tenía forma de
+                pedirlos (2026-09-25, reportado por el usuario). */}
+            {(pago.data?.ultimos_4_digitos || pago.data?.tiene_data_point) && (
+              <div className="flex flex-wrap gap-3 border-t pt-3">
+                {pago.data?.ultimos_4_digitos && <NumeroTarjetaReveal clienteId={clienteId} />}
+                {pago.data?.tiene_data_point && <DataPointReveal clienteId={clienteId} />}
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
       </Accordion>
