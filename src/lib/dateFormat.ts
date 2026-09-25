@@ -27,3 +27,18 @@ export function fmtDateTime(iso?: string | null): string {
   const base = `${p.mo}/${p.d}/${p.y}`
   return p.h ? `${base} ${p.h}:${p.mi}` : base
 }
+
+const FECHA_FILTRO_RE = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Guarda para el `onChange` de un filtro "Desde"/"Hasta" (`<input
+ * type="date">`) — casi siempre `e.target.value` es '' o un YYYY-MM-DD
+ * limpio, pero en producción (2026-09-25) se vio un valor con el año
+ * duplicado ("92026-09-23") que el navegador dejó pasar igual y que
+ * rompía la consulta en el backend con un error 500. `setter` solo se
+ * llama si el valor es válido — un valor raro simplemente no cambia nada,
+ * en vez de mandar algo que el backend va a tener que rechazar.
+ */
+export function onChangeFechaFiltro(valor: string, setter: (v: string) => void) {
+  if (valor === '' || FECHA_FILTRO_RE.test(valor)) setter(valor)
+}

@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCasosPostventa } from '@/hooks/casosPostventa'
 import { TIPO_CASO_POSTVENTA, TIPO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_COLOR, TIPO_GESTION_POSTVENTA, TIPO_GESTION_POSTVENTA_LABEL, TIPO_GESTION_POSTVENTA_COLOR } from '@/lib/casosPostventaConstants'
-import { fmtDateTime } from '@/lib/dateFormat'
+import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
 import type { EstadoCasoPostventa } from '@/lib/types'
 
 const ROL_GESTION_LABEL: Record<string, string> = { agente: 'Agente', backoffice: 'BackOffice' }
@@ -131,11 +131,11 @@ export function CasosPostventaTable({
         )}
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Desde</label>
-          <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => onChangeFechaFiltro(e.target.value, setDesde)} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Hasta</label>
-          <Input type="date" lang="en-US" className="h-9 w-36" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          <Input type="date" lang="en-US" className="h-9 w-36" value={hasta} onChange={(e) => onChangeFechaFiltro(e.target.value, setHasta)} />
         </div>
         {hayFiltros && (
           <Button variant="ghost" size="sm" className="h-9 self-end" onClick={limpiar}>

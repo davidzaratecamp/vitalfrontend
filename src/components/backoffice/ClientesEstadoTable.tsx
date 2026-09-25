@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useColaBackoffice } from '@/hooks/backoffice'
 import { useUsuarios } from '@/hooks/usuarios'
-import { fmtDateTime } from '@/lib/dateFormat'
+import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
 
 function diasDesde(iso: string) {
   const ms = Date.now() - new Date(iso.replace(' ', 'T')).getTime()
@@ -93,11 +93,11 @@ export function ClientesEstadoTable({
               el idioma de la página (día/mes/año con lang="es" del sitio) —
               esto lo fuerza a mes/día/año en Chrome/Edge. Firefox no respeta
               `lang` acá, solo el locale del SO. */}
-          <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => onChangeFechaFiltro(e.target.value, setDesde)} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Hasta</label>
-          <Input type="date" lang="en-US" className="h-9 w-36" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          <Input type="date" lang="en-US" className="h-9 w-36" value={hasta} onChange={(e) => onChangeFechaFiltro(e.target.value, setHasta)} />
         </div>
         {hayFiltros && (
           <Button

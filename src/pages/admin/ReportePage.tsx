@@ -17,7 +17,7 @@ import { useEmpresas } from '@/hooks/catalogos'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
-import { fmtDate } from '@/lib/dateFormat'
+import { fmtDate, onChangeFechaFiltro } from '@/lib/dateFormat'
 
 export default function ReportePage() {
   const navigate = useNavigate()
@@ -109,11 +109,11 @@ export default function ReportePage() {
           <label className="text-xs text-muted-foreground">Desde</label>
           {/* lang="en-US" fuerza mes/día/año en el picker nativo (Chrome/Edge
               lo muestran en el idioma de la página, "es", si no se indica). */}
-          <Input type="date" lang="en-US" className="h-9" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1) }} />
+          <Input type="date" lang="en-US" className="h-9" value={from} onChange={(e) => { onChangeFechaFiltro(e.target.value, setFrom); setPage(1) }} />
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Hasta</label>
-          <Input type="date" lang="en-US" className="h-9" value={to} onChange={(e) => { setTo(e.target.value); setPage(1) }} />
+          <Input type="date" lang="en-US" className="h-9" value={to} onChange={(e) => { onChangeFechaFiltro(e.target.value, setTo); setPage(1) }} />
         </div>
       </div>
 
