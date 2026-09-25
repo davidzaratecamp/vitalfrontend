@@ -38,7 +38,6 @@ const ReportePage = lazy(() => import('@/pages/admin/ReportePage'))
 const ClienteDetallePage = lazy(() => import('@/pages/admin/ClienteDetallePage'))
 // UsuariosPage: import lazy quitado junto con su ruta (ver comentario más
 // abajo) — el archivo sigue existiendo.
-const CatalogosPage = lazy(() => import('@/pages/admin/CatalogosPage'))
 const AdminPostventaPage = lazy(() => import('@/pages/admin/PostventaPage'))
 const PapeleraPage = lazy(() => import('@/pages/admin/PapeleraPage'))
 
@@ -103,10 +102,15 @@ export default function App() {
                   bloquea (usuariosSistema.routes.js); para reactivar,
                   restaurar esta ruta + el import lazy de abajo + el link en
                   AdminShell.tsx. */}
+              {/* /catalogos (CatalogosPage) quitada igual (2026-09-26) —
+                  "él no las coloca, cuando hay que alimentarlo me dicen a
+                  mí". El archivo sigue en pages/admin/CatalogosPage.tsx y
+                  el backend también bloquea el POST/PATCH (ver
+                  catalogos.routes.js); para reactivar, restaurar esta ruta
+                  + el import lazy de abajo + el link en AdminShell.tsx. */}
               <Route path="/postventa" element={<AdminPostventaPage />} />
               <Route path="/casos/:id" element={<GestionCasoPage />} />
               <Route path="/papelera" element={<PapeleraPage />} />
-              <Route path="/catalogos" element={<CatalogosPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
