@@ -21,6 +21,7 @@ import { IngresosStep } from '@/components/agente/steps/IngresosStep'
 import { PlanSaludStep } from '@/components/agente/steps/PlanSaludStep'
 import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
+import { SoporteCasoPostventaCard } from '@/components/casosPostventa/SoporteCasoPostventaCard'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias } from '@/hooks/clientes'
 import { useCasoPostventa, useHistorialCasoPostventa, useActualizarCasoPostventa } from '@/hooks/casosPostventa'
 import { apiErrorMessage } from '@/lib/api'
@@ -205,6 +206,8 @@ export default function GestionCasoPage() {
           <AccordionContent><EvidenciasStep clienteId={clienteId} editable={editable} /></AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      <SoporteCasoPostventaCard casoId={caso.id} editable={editable} />
 
       {editable && (
         <Card>

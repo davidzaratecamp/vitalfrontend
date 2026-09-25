@@ -396,3 +396,16 @@ export interface HistorialCasoPostventa {
   motivo: string | null
   created_at: string
 }
+
+/** Documento libre adjunto a un caso de postventa — sin categoría, sin
+ * límite de negocio, lo puede subir agente o BackOffice mientras tengan el
+ * caso activo (2026-09-25, pedido del usuario). */
+export interface SoporteCasoPostventa {
+  id: number
+  caso_postventa_id: number
+  nombre_archivo: string
+  tipo_archivo: string
+  tamano_bytes: number
+  subido_por: number
+  created_at: string
+}
