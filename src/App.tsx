@@ -29,6 +29,7 @@ const CompletadosPage = lazy(() => import('@/pages/backoffice/CompletadosPage'))
 const RechazadosBackofficePage = lazy(() => import('@/pages/backoffice/RechazadosPage'))
 const GestionClientePage = lazy(() => import('@/pages/backoffice/GestionClientePage'))
 const PostventaPage = lazy(() => import('@/pages/backoffice/PostventaPage'))
+const PostventaGestionadosPage = lazy(() => import('@/pages/backoffice/PostventaGestionadosPage'))
 const PendienteTripartitaPage = lazy(() => import('@/pages/backoffice/PendienteTripartitaPage'))
 
 // Admin
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/rechazados" element={<RechazadosBackofficePage />} />
               <Route path="/clientes/:id" element={<GestionClientePage />} />
               <Route path="/postventa" element={<PostventaPage />} />
+              <Route path="/postventa/gestionados" element={<PostventaGestionadosPage />} />
               <Route path="/casos/:id" element={<GestionCasoPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
