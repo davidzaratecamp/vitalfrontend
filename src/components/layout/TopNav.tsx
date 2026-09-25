@@ -1,5 +1,4 @@
-import { Fragment } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { HeartPulse, Moon, Sun, LogOut, User as UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,27 +29,44 @@ function itemClass({ isActive }: { isActive: boolean }) {
   )
 }
 
-/** Cuando un ítem trae `group` distinto del anterior, se pinta un separador
- * + una mini-etiqueta antes de él — así un menú con varias pestañas (ej.
- * "Ventas" vs "Postventa" en AgentShell) queda agrupado visualmente en vez
- * de una fila plana de botones sin relación aparente entre sí. */
 function NavItems({ items }: { items: NavItem[] }) {
   return (
     <>
-      {items.map((n, i) => (
-        <Fragment key={n.to}>
-          {n.group && n.group !== items[i - 1]?.group && (
-            <span className={cn('shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60', i > 0 && 'ml-1.5 border-l pl-3')}>
-              {n.group}
-            </span>
-          )}
-          <NavLink to={n.to} end={n.end} className={itemClass}>
-            <n.icon className="size-4" />
-            {n.label}
-          </NavLink>
-        </Fragment>
+      {items.map((n) => (
+        <NavLink key={n.to} to={n.to} end={n.end} className={itemClass}>
+          <n.icon className="size-4" />
+          {n.label}
+        </NavLink>
       ))}
     </>
+  )
+}
+
+/**
+ * Switcher Ventas/Postventa (o los grupos que traiga cada `items`) — solo
+ * aparece cuando el menú de ese rol realmente usa más de un `group`
+ * (AgentShell hoy; BackOffice/Admin/Supervisor no ponen `group` en sus
+ * ítems y nunca lo ven). Antes las 6 pestañas de agente iban todas en una
+ * sola fila con scroll horizontal — feo e incómodo (2026-09-25, pedido del
+ * usuario); ahora se ve un botón para elegir el grupo y solo esas pestañas.
+ */
+function GroupSwitcher({ groups, active, onChange }: { groups: string[]; active: string; onChange: (g: string) => void }) {
+  return (
+    <div className="flex shrink-0 items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
+      {groups.map((g) => (
+        <button
+          key={g}
+          type="button"
+          onClick={() => onChange(g)}
+          className={cn(
+            'rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+            g === active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {g}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -59,11 +75,31 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
   const logout = useAuthStore((s) => s.logout)
   const { theme, toggleTheme } = useUiStore()
   const navigate = useNavigate()
+  const location = useLocation()
   const isDark = document.documentElement.classList.contains('dark')
+
+  // Grupos declarados en `items` (ej. "Ventas"/"Postventa"), en el orden en
+  // que aparecen — vacío si el rol no usa `group`, y ahí no cambia nada de
+  // lo que había antes. El grupo activo sale siempre de la ruta actual
+  // (nunca de un estado propio) — así el switcher queda sincronizado
+  // también con atrás/adelante del navegador o un link directo, no solo con
+  // sus propios botones.
+  const groups = [...new Set(items.map((i) => i.group).filter((g): g is string => !!g))]
+  const grupoPorRuta = items.find(
+    (i) => i.group && (location.pathname === i.to || (i.to !== '/' && location.pathname.startsWith(`${i.to}/`))),
+  )?.group
+  const grupoActivo = groups.length > 1 ? (grupoPorRuta ?? groups[0]) : null
+
+  function cambiarGrupo(g: string) {
+    const destino = items.find((i) => i.group === g && i.end) ?? items.find((i) => i.group === g)
+    if (destino) navigate(destino.to)
+  }
+
+  const itemsVisibles = grupoActivo ? items.filter((i) => !i.group || i.group === grupoActivo) : items
 
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6">
         <div className="flex shrink-0 items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <HeartPulse className="size-5" />
@@ -74,8 +110,10 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
           </div>
         </div>
 
+        {groups.length > 1 && <GroupSwitcher groups={groups} active={grupoActivo!} onChange={cambiarGrupo} />}
+
         <nav className="hidden items-center gap-1 overflow-x-auto md:flex">
-          <NavItems items={items} />
+          <NavItems items={itemsVisibles} />
         </nav>
 
         <div className="flex-1" />
@@ -116,7 +154,7 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
 
       {/* En móvil el menú no cabe junto a la marca — baja como tira con scroll horizontal. */}
       <nav className="flex items-center gap-1 overflow-x-auto border-t px-4 py-1.5 md:hidden">
-        <NavItems items={items} />
+        <NavItems items={itemsVisibles} />
       </nav>
     </header>
   )
