@@ -5,6 +5,7 @@ import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard
 import { PageHeader } from '@/components/common/PageHeader'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { ObservacionesCard } from '@/components/common/ObservacionesCard'
+import { SoportePolizaCard } from '@/components/common/SoportePolizaCard'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { CopyableId } from '@/components/common/CopyableId'
 import { Card } from '@/components/ui/card'
@@ -79,6 +80,12 @@ export default function NuevoRegistroPage() {
 
   const editable = !cliente || cliente.estado === 'borrador' || cliente.estado === 'rechazado_backoffice'
   const clienteId = cliente?.id
+  // El motivo vive en el historial de estados, no en el cliente directo —
+  // viene ordenado del más reciente al más viejo (getClienteDetalle), así
+  // que el primer rechazo que aparece ya es el último (2026-09-28,
+  // reportado por el usuario: el agente no tenía cómo ver la imagen de
+  // soporte del rechazo desde acá, solo desde la lista aparte "Rechazados").
+  const motivoRechazo = cliente?.historial.find((h) => h.estado_nuevo === 'rechazado_backoffice')?.motivo
 
   const ingresoTitularOk = ingresos.data?.rows.some((r) => r.dependiente_id == null)
   // "Subir venta" (Finalizar) exige que el cliente ya haya firmado la carta
@@ -146,10 +153,20 @@ export default function NuevoRegistroPage() {
       />
 
       {cliente?.estado === 'rechazado_backoffice' && (
-        <Card className="border-amber-500/40 bg-amber-500/5 p-4 text-sm">
-          Este registro fue devuelto por BackOffice. Corrige los pasos necesarios y presiona
-          «Reenviar a BackOffice» al final.
-        </Card>
+        <>
+          <Card className="space-y-2 border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+            <p>
+              Este registro fue devuelto por BackOffice. Corrige los pasos necesarios y presiona
+              «Reenviar a BackOffice» al final.
+            </p>
+            {motivoRechazo && (
+              <p className="rounded-md bg-background/60 px-2.5 py-1.5">
+                <span className="font-medium">Motivo:</span> {motivoRechazo}
+              </p>
+            )}
+          </Card>
+          {clienteId && <SoportePolizaCard clienteId={clienteId} editable={false} tipo="rechazo" titulo="Soporte del rechazo" />}
+        </>
       )}
 
       {clienteId && <ObservacionesCard clienteId={clienteId} observaciones={cliente?.observaciones ?? []} />}
