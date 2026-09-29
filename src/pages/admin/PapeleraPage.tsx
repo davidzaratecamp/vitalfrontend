@@ -101,6 +101,8 @@ export default function PapeleraPage() {
                   <th className="px-4 py-2.5 font-medium">Estado antes de borrar</th>
                   <th className="px-4 py-2.5 font-medium">Eliminado por</th>
                   <th className="px-4 py-2.5 font-medium">Eliminado el</th>
+                  <th className="px-4 py-2.5 font-medium">IP</th>
+                  <th className="px-4 py-2.5 font-medium">Observación</th>
                 </tr>
               </thead>
               <tbody>
@@ -117,6 +119,10 @@ export default function PapeleraPage() {
                     </td>
                     <td className="px-4 py-2.5">{r.eliminado_por_nombre} <span className="text-xs text-muted-foreground">({ROL_LABEL[r.eliminado_por_rol]})</span></td>
                     <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{fmtDateTime(r.created_at)}</td>
+                    <td className="px-4 py-2.5 tabular-nums text-xs text-muted-foreground">{r.ip_origen ?? '—'}</td>
+                    <td className="max-w-64 px-4 py-2.5 text-xs text-muted-foreground">
+                      {r.observacion ? <span className="line-clamp-2" title={r.observacion}>{r.observacion}</span> : '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

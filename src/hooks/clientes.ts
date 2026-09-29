@@ -75,12 +75,15 @@ export function useActualizarTitular(id: string | number) {
   })
 }
 
-/** Solo borra si el registro sigue en 'borrador' (el backend lo exige) —
- * agente (el suyo), supervisor y admin (2026-09-24). */
+/** Agente (el suyo: borrador o rechazado_backoffice) y supervisor (solo
+ * borrador) — el backend lo exige. admin puede eliminar en CUALQUIER
+ * estado (2026-09-29) y puede mandar una `observacion` opcional que queda
+ * en la papelera junto con quién/cuándo/desde qué IP. */
 export function useEliminarCliente() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string | number) => (await api.delete(`/clientes/${id}`)).data,
+    mutationFn: async ({ id, observacion }: { id: string | number; observacion?: string }) =>
+      (await api.delete(`/clientes/${id}`, { data: observacion ? { observacion } : undefined })).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes'] }),
   })
 }

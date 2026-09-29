@@ -345,13 +345,17 @@ export interface ClienteEliminado {
   social: string | null
   correo_electronico: string | null
   phone_1: string | null
-  estado_previo: 'borrador' | 'rechazado_backoffice'
+  estado_previo: 'borrador' | 'pendiente_backoffice' | 'pendiente_llamada_tripartita' | 'aprobado' | 'rechazado_backoffice'
   agente_id: number
   agente_nombre: string
   empresa_id: number | null
   eliminado_por: number
   eliminado_por_nombre: string
   eliminado_por_rol: 'agente' | 'supervisor' | 'admin'
+  // Desde 2026-09-29 (admin puede eliminar cualquier estado) — null en
+  // filas viejas, de antes de que existiera la columna.
+  ip_origen: string | null
+  observacion: string | null
   created_at: string
 }
 

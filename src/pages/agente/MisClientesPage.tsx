@@ -34,7 +34,7 @@ export default function MisClientesPage() {
   async function confirmarBorrado() {
     if (!porBorrar) return
     try {
-      await eliminar.mutateAsync(porBorrar.id)
+      await eliminar.mutateAsync({ id: porBorrar.id })
       toast.success(porBorrar.estado === 'borrador' ? 'Borrador eliminado' : 'Registro rechazado eliminado')
       setPorBorrar(null)
     } catch (err) {

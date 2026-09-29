@@ -125,7 +125,7 @@ export default function ValidarClientePage() {
           <div className="flex gap-2.5 rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
             <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="text-amber-700 dark:text-amber-400">
-              No hay ningún cliente aprobado con ese teléfono. Revisa el número con el cliente.
+              No hay ningún cliente aprobado o pendiente de BackOffice con ese teléfono. Revisa el número con el cliente.
             </p>
           </div>
         )}

@@ -117,7 +117,7 @@ export default function NuevoRegistroPage() {
   async function onEliminar() {
     if (!clienteId) return
     try {
-      await eliminar.mutateAsync(clienteId)
+      await eliminar.mutateAsync({ id: clienteId })
       toast.success(cliente?.estado === 'borrador' ? 'Borrador eliminado' : 'Registro eliminado')
       navigate('/')
     } catch (err) {
