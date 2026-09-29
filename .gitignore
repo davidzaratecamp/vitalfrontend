@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Minijuego "Gato Runner" (2026-09-29) — todavía en pruebas, el usuario
+# pidió no subirlo a git por ahora. TopNav.tsx ya lo importa/monta (queda
+# como cambio local sin commitear) — cuando se decida subirlo, quitar esta
+# línea y commitear src/components/game/ junto con TopNav.tsx.
+src/components/game/

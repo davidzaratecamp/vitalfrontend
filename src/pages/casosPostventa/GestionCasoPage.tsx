@@ -67,20 +67,29 @@ export default function GestionCasoPage() {
   if (cargandoCaso || !caso || cargandoCliente || !cliente) return <Skeleton className="h-96 rounded-xl" />
 
   const clienteId = cliente.id
+  // BackOffice: 'escalado_backoffice' (sin tomar) YA NO habilita edición
+  // directa — hay que darle "Seguimiento" primero (2026-09-29, pedido del
+  // usuario: exclusividad, un caso tomado queda asignado a esa persona).
+  // Si el backend dejó pasar la lectura de este caso, es porque está sin
+  // tomar (cualquiera puede verlo) o porque lo tomó ESTE mismo usuario — un
+  // compañero de BackOffice que no lo tomó ni siquiera llega a cargar esta
+  // página (assertCasoAccesible lo bloquea antes).
   const activoParaMi =
     (role === 'agente' && (caso.estado === 'nuevo' || caso.estado === 'seguimiento')) ||
-    (role === 'backoffice' && caso.estado === 'escalado_backoffice')
+    (role === 'backoffice' && caso.estado === 'seguimiento_backoffice')
   const editable = activoParaMi
+  const puedeTomarBackoffice = role === 'backoffice' && caso.estado === 'escalado_backoffice'
   const ingresoTitularOk = ingresos.data?.rows.some((r) => r.dependiente_id == null)
   const tipoGestionAEnviar = tipoGestion || caso.tipo_gestion || undefined
 
-  // Admin ve un resumen de solo lectura (como en Reporte consolidado), no
-  // el formulario de 7 pasos — "un montón de formularios que él no va a
-  // abrir todos" (2026-09-26, pedido del usuario). Los "cambios recientes"
-  // son la mejor aproximación real a qué se tocó durante este caso, sin un
-  // log de campo por campo — ver lib/cambiosRecientes.ts.
-  const esAdmin = role === 'admin'
-  const cambios = esAdmin ? calcularCambiosRecientes(cliente, caso.created_at) : []
+  // Admin y supervisor ven un resumen de solo lectura (como en Reporte
+  // consolidado), no el formulario de 7 pasos — "un montón de formularios
+  // que él no va a abrir todos" (2026-09-26, pedido del usuario; supervisor
+  // sumado 2026-09-29, mismo criterio). Los "cambios recientes" son la
+  // mejor aproximación real a qué se tocó durante este caso, sin un log de
+  // campo por campo — ver lib/cambiosRecientes.ts.
+  const esSoloLectura = role === 'admin' || role === 'supervisor'
+  const cambios = esSoloLectura ? calcularCambiosRecientes(cliente, caso.created_at) : []
   const seccionesActualizadas = new Set(cambios.map((c) => c.seccion))
 
   async function guardar(estado: string) {
@@ -96,6 +105,17 @@ export default function GestionCasoPage() {
     }
   }
 
+  // "Tomar" un caso escalado — a diferencia de guardar(), no navega afuera:
+  // se queda en la misma página para que arranque a gestionarlo de una.
+  async function tomarCaso() {
+    try {
+      await actualizar.mutateAsync({ estado: 'seguimiento_backoffice' })
+      toast.success('Caso tomado — ya podés gestionarlo')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo tomar el caso'))
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -107,14 +127,34 @@ export default function GestionCasoPage() {
             <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${ESTADO_CASO_POSTVENTA_COLOR[caso.estado]}`}>
               {ESTADO_CASO_POSTVENTA_LABEL[caso.estado]}
             </span>
+            {/* Quién de BackOffice lo tomó — visible para todos (agente,
+                admin, supervisor, y el propio backoffice que lo tomó);
+                2026-09-29, pedido del usuario. */}
+            {caso.estado === 'seguimiento_backoffice' && caso.gestionado_por_nombre && (
+              <span className="rounded-md bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-600 dark:text-sky-400">
+                Tomado por {caso.gestionado_por_nombre}
+              </span>
+            )}
           </>
         }
       />
 
-      {!editable && (
+      {puedeTomarBackoffice && (
+        <Card className="flex flex-col items-start gap-3 border-sky-500/40 bg-sky-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Nadie de BackOffice lo ha tomado todavía. Al tomarlo, queda asignado solo a vos — tus compañeros ya no van a
+            poder verlo ni gestionarlo mientras lo tengas en seguimiento.
+          </p>
+          <Button disabled={actualizar.isPending} onClick={tomarCaso}>
+            <CircleCheck className="size-4" /> Tomar caso (Seguimiento)
+          </Button>
+        </Card>
+      )}
+
+      {!editable && !puedeTomarBackoffice && (
         <Card className="border-muted-foreground/20 bg-muted/30 p-4 text-sm text-muted-foreground">
-          {role === 'admin'
-            ? 'Vista de solo lectura — admin no gestiona casos de postventa, solo los supervisa.'
+          {esSoloLectura
+            ? `Vista de solo lectura — ${role === 'admin' ? 'admin' : 'supervisor'} no gestiona casos de postventa, solo los supervisa.`
             : 'Este caso ya no está activo en tu cola — puedes revisarlo, pero no editarlo.'}
         </Card>
       )}
@@ -134,7 +174,7 @@ export default function GestionCasoPage() {
         </CardContent>
       </Card>
 
-      {esAdmin ? (
+      {esSoloLectura ? (
         <>
           {/* "Cambios recientes" — no hay un log campo por campo en el
               sistema, esto compara el updated_at de cada sección contra

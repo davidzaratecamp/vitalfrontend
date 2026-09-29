@@ -405,7 +405,7 @@ export interface ClienteContacto {
 
 /* ───────────────────────── Postventa (Agente / BackOffice) ───────────────────────── */
 
-export type EstadoCasoPostventa = 'nuevo' | 'seguimiento' | 'cerrado' | 'escalado_backoffice'
+export type EstadoCasoPostventa = 'nuevo' | 'seguimiento' | 'cerrado' | 'escalado_backoffice' | 'seguimiento_backoffice'
 export type TipoGestionPostventa = 'reclamacion' | 'cancelacion' | 'gestion_habitual'
 
 /** Cliente ya APROBADO que matcheó por teléfono al validar antes de abrir un

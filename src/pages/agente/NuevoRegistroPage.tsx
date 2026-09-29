@@ -24,7 +24,7 @@ import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, use
 import { useFirmas } from '@/hooks/firmas'
 import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
-import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, CATEGORIA_EVIDENCIA_OBLIGATORIA } from '@/lib/clienteConstants'
+import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, CATEGORIA_EVIDENCIA_OBLIGATORIA, ESTADOS_EN_TRAMITE } from '@/lib/clienteConstants'
 
 export default function NuevoRegistroPage() {
   const { id } = useParams()
@@ -78,7 +78,17 @@ export default function NuevoRegistroPage() {
     )
   }
 
-  const editable = !cliente || cliente.estado === 'borrador' || cliente.estado === 'rechazado_backoffice'
+  // Editable en cualquier estado salvo "en trámite" con BackOffice — desde
+  // 2026-09-29 incluye 'aprobado' (antes quedaba bloqueado incluso para el
+  // dueño, bug reportado por el usuario y ya corregido también en el
+  // backend, ver ESTADOS_EN_TRAMITE).
+  const editable = !cliente || !ESTADOS_EN_TRAMITE.includes(cliente.estado)
+  // "Finalizar y enviar a BackOffice" es más angosto que `editable` — solo
+  // tiene sentido para un registro que todavía no se envió (borrador) o que
+  // volvió rechazado (rechazado_backoffice). Un 'aprobado' ahora es
+  // editable pero NO se vuelve a "finalizar" (el backend lo rechazaría,
+  // finalizar() sigue exigiendo uno de estos dos estados a propósito).
+  const puedeFinalizar = !cliente || cliente.estado === 'borrador' || cliente.estado === 'rechazado_backoffice'
   const clienteId = cliente?.id
   // El motivo vive en el historial de estados, no en el cliente directo —
   // viene ordenado del más reciente al más viejo (getClienteDetalle), así
@@ -286,7 +296,7 @@ export default function NuevoRegistroPage() {
         </AccordionItem>
       </Accordion>
 
-      {editable && clienteId && (
+      {puedeFinalizar && clienteId && (
         <Card className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             {firmaFirmada

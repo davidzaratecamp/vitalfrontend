@@ -40,6 +40,7 @@ const ClienteDetallePage = lazy(() => import('@/pages/admin/ClienteDetallePage')
 // abajo) — el archivo sigue existiendo.
 const AdminPostventaPage = lazy(() => import('@/pages/admin/PostventaPage'))
 const PapeleraPage = lazy(() => import('@/pages/admin/PapeleraPage'))
+const SupervisorPostventaPage = lazy(() => import('@/pages/supervisor/PostventaPage'))
 
 function PageFallback() {
   return (
@@ -119,6 +120,8 @@ export default function App() {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/reporte" element={<ReportePage />} />
               <Route path="/clientes/:id" element={<ClienteDetallePage />} />
+              <Route path="/postventa" element={<SupervisorPostventaPage />} />
+              <Route path="/casos/:id" element={<GestionCasoPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

@@ -83,6 +83,13 @@ export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
   rechazado_backoffice: 'bg-red-500/10 text-red-600 dark:text-red-400',
 }
 
+// Espejo de ESTADOS_EN_TRAMITE (backend, clientes.constants.js) — mientras
+// el cliente está acá, ni el propio agente dueño puede editar el
+// formulario (BackOffice/la llamada tripartita lo está revisando en
+// simultáneo). Todo lo demás (borrador, rechazado_backoffice, y desde
+// 2026-09-29 también aprobado) es editable para el dueño.
+export const ESTADOS_EN_TRAMITE = ['pendiente_backoffice', 'pendiente_llamada_tripartita']
+
 // Estado del envío de la Carta CMS Vital (FirmaCloud) — ver hooks/firmas.ts.
 export const ESTADO_FIRMA_LABEL: Record<string, string> = {
   pending: 'Enviada — pendiente de firma',

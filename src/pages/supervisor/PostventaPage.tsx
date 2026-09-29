@@ -1,10 +1,12 @@
 import { Headphones } from 'lucide-react'
 import { CasosPostventaTable } from '@/components/casosPostventa/CasosPostventaTable'
 
-/** Vista consolidada de postventa para admin — sin restricción de estado ni
- * de empresa (a diferencia de la cola de BackOffice), con filtro de
- * "gestionado por Agente/BackOffice" para distinguir de un vistazo quién
- * llevó cada caso (2026-09-24, pedido del usuario). */
+/** Vista consolidada de postventa para supervisor — igual que la de admin
+ * (2026-09-29, pedido del usuario: el supervisor tiene que poder ver el
+ * estado de seguimiento de BackOffice y quién tomó cada caso, igual que
+ * admin). Sin restricción de estado, acotada a la empresa del supervisor
+ * (a diferencia de admin, que ve las dos) — ver listarCasos en
+ * casosPostventa.service.js. */
 export default function PostventaPage() {
   return (
     <CasosPostventaTable
@@ -18,7 +20,7 @@ export default function PostventaPage() {
       ]}
       mostrarRolGestion
       title="Postventa"
-      description="Todos los casos de postventa, gestionados por Agente o por BackOffice."
+      description="Todos los casos de postventa de tu empresa, gestionados por Agente o por BackOffice."
       emptyIcon={Headphones}
       emptyTitle="Todavía no hay casos de postventa"
       emptyDescription="Cuando un agente valide un cliente y abra un caso, aparecerá aquí."
