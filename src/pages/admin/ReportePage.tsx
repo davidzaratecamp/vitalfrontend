@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { SearchSelect } from '@/components/common/SearchSelect'
 import { CopyableId } from '@/components/common/CopyableId'
-import { useReporte, descargarReporteCsv } from '@/hooks/admin'
+import { useReporte, descargarReporteExcel } from '@/hooks/admin'
 import { useUsuarios } from '@/hooks/usuarios'
 import { useEmpresas } from '@/hooks/catalogos'
 import { useAuthStore } from '@/stores/auth'
@@ -50,7 +50,7 @@ export default function ReportePage() {
   async function exportar() {
     setDownloading(true)
     try {
-      await descargarReporteCsv(filters)
+      await descargarReporteExcel(filters)
     } catch (err) {
       toast.error(apiErrorMessage(err, 'No se pudo exportar'))
     } finally {
@@ -62,11 +62,11 @@ export default function ReportePage() {
     <div className="space-y-6">
       <PageHeader
         title="Reporte consolidado"
-        description="Todos los registros, con filtros y exportación a CSV."
+        description="Todos los registros, con filtros y exportación a Excel completa (titular, cónyuge, dependientes, ingresos, plan, pago y evidencias)."
         actions={
           <Button variant="outline" onClick={exportar} disabled={downloading}>
             {downloading ? <FileSpreadsheet className="size-4 animate-pulse" /> : <Download className="size-4" />}
-            {downloading ? 'Generando...' : 'Exportar CSV'}
+            {downloading ? 'Generando...' : 'Exportar Excel'}
           </Button>
         }
       />

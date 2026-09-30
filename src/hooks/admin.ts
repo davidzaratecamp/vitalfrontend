@@ -44,12 +44,19 @@ export const usePapelera = (filters: PapeleraFilters = {}) =>
     queryFn: async () => (await api.get<PapeleraPage>('/admin/papelera', { params: filters })).data,
   })
 
-export async function descargarReporteCsv(filters: AdminFilters = {}) {
-  const res = await api.get('/admin/reporte.csv', { params: filters, responseType: 'blob' })
+// Excel completo (2026-09-30, pedido del usuario: "el export me traiga toda
+// la información de los formularios de ventas") — reemplaza al export CSV
+// que había antes (13 columnas nada más). El backend genera un .xlsx real
+// con una hoja por paso del formulario — ver streamReporteExcel en
+// admin.service.js. La ruta vieja (GET /admin/reporte.csv) se deja intacta
+// del lado del backend por si algo la sigue pegando directo, pero ya no se
+// usa desde acá.
+export async function descargarReporteExcel(filters: AdminFilters = {}) {
+  const res = await api.get('/admin/reporte.xlsx', { params: filters, responseType: 'blob' })
   const url = URL.createObjectURL(res.data as Blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `reporte_vital_${filters.from ?? ''}_${filters.to ?? ''}.csv`
+  a.download = `reporte_vital_${filters.from ?? ''}_${filters.to ?? ''}.xlsx`
   document.body.appendChild(a)
   a.click()
   a.remove()
