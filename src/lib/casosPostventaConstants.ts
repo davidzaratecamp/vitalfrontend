@@ -10,12 +10,14 @@ export const TIPO_CASO_POSTVENTA = [
   { valor: 'asignacion_citas', nombre: 'Asignación de Citas', responsable: 'agente' },
   { valor: 'asignacion_doctor', nombre: 'Asignación de Doctor Primario / Especialista', responsable: 'agente' },
   { valor: 'aclaracion_factura', nombre: 'Aclaración Factura', responsable: 'agente' },
+  { valor: 'notificacion_bienvenida', nombre: 'Notificación y paquete de bienvenida', responsable: 'agente' },
   { valor: 'cambio_vida', nombre: 'Cambio de Vida', responsable: 'backoffice' },
   { valor: 'solicitud_cancelacion', nombre: 'Solicitud de Cancelación', responsable: 'backoffice' },
   { valor: 'solicitud_apelacion', nombre: 'Solicitud de Apelación', responsable: 'backoffice' },
   { valor: 'cambio_agente_aor', nombre: 'Solicitud Cambio de Agente (AOR)', responsable: 'backoffice' },
   { valor: 'cliente_no_aparece_broker', nombre: 'Gestión Cliente no Aparece en Brocker', responsable: 'backoffice' },
   { valor: 'autorizacion_poliza', nombre: 'Gestión de Autorización Póliza', responsable: 'backoffice' },
+  { valor: 'gestion_primer_pago', nombre: 'Gestión 1er pago', responsable: 'backoffice' },
 ] as const
 
 export const TIPO_CASO_POSTVENTA_LABEL: Record<string, string> = Object.fromEntries(
