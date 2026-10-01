@@ -179,6 +179,18 @@ export default function NuevoRegistroPage() {
         </>
       )}
 
+      {/* Soporte de póliza (tipo="poliza", default) — lo que BackOffice
+          adjunta al aprobar una venta (imagen/PDF de evidencia). Admin y
+          BackOffice ya lo veían en sus pantallas; acá faltaba por completo
+          (reportado por el usuario, 2026-10-01: "no le aparece la
+          evidencia de aprobación" — Paula Nicole no la veía porque esta
+          página nunca montaba la tarjeta, solo la de rechazo). Solo
+          lectura para el agente — sube/borra BackOffice desde su pantalla
+          de gestión. No ocupa espacio si todavía no hay nada adjunto (ver
+          SoportePolizaCard: `if (!editable && !soportes?.length) return
+          null`). */}
+      {clienteId && <SoportePolizaCard clienteId={clienteId} editable={false} />}
+
       {clienteId && <ObservacionesCard clienteId={clienteId} observaciones={cliente?.observaciones ?? []} />}
 
       <Accordion type="single" collapsible value={open} onValueChange={(v) => setOpen(v)}>
