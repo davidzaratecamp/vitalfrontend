@@ -55,3 +55,10 @@ export const ESTADO_CASO_POSTVENTA_COLOR: Record<string, string> = {
   escalado_backoffice: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
   seguimiento_backoffice: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
 }
+
+// Espejo de REASIGNACION_PREFIJO en casosPostventa.constants.js (backend) —
+// si cambia ahí, cambiarlo acá también. GestionCasoPage.tsx busca este
+// prefijo en el historial del caso para mostrar un aviso permanente y
+// visible de "este caso lo gestionaba otra persona antes" (2026-10-02,
+// pedido del usuario — ver reasignarCasoBackoffice en el backend).
+export const REASIGNACION_PREFIJO = '[Reasignación]'

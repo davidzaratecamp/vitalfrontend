@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, History, Save, CircleCheck, Forward, PhoneCall, Sparkles } from 'lucide-react'
+import { User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, History, Save, CircleCheck, Forward, PhoneCall, Sparkles, ArrowRightLeft } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
@@ -27,7 +27,7 @@ import { NumeroTarjetaReveal, DataPointReveal } from '@/components/common/DatosT
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias } from '@/hooks/clientes'
 import { useCasoPostventa, useHistorialCasoPostventa, useActualizarCasoPostventa } from '@/hooks/casosPostventa'
 import { apiErrorMessage } from '@/lib/api'
-import { TIPO_CASO_POSTVENTA_LABEL, TIPO_GESTION_POSTVENTA, TIPO_GESTION_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_COLOR } from '@/lib/casosPostventaConstants'
+import { TIPO_CASO_POSTVENTA_LABEL, TIPO_GESTION_POSTVENTA, TIPO_GESTION_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_COLOR, REASIGNACION_PREFIJO } from '@/lib/casosPostventaConstants'
 import { fmtDateTime } from '@/lib/dateFormat'
 import { calcularCambiosRecientes } from '@/lib/cambiosRecientes'
 import { useAuthStore } from '@/stores/auth'
@@ -92,6 +92,14 @@ export default function GestionCasoPage() {
   const cambios = esSoloLectura ? calcularCambiosRecientes(cliente, caso.created_at) : []
   const seccionesActualizadas = new Set(cambios.map((c) => c.seccion))
 
+  // Aviso permanente de reasignación (2026-10-02, pedido del usuario: "no
+  // quiero que el día de mañana [el nuevo dueño] diga: eso lo gestionó
+  // [el anterior]") — `historial` ya viene del más nuevo al más viejo
+  // (getHistorialCaso, ORDER BY created_at DESC), así que el primer match
+  // es la reasignación más reciente. Visible para CUALQUIER rol, no solo
+  // BackOffice — justo el punto es que quede a la vista de todos.
+  const reasignacion = historial?.find((h) => h.motivo?.startsWith(REASIGNACION_PREFIJO))
+
   async function guardar(estado: string) {
     try {
       await actualizar.mutateAsync({ estado, tipo_gestion: tipoGestionAEnviar, motivo: motivo || undefined })
@@ -138,6 +146,22 @@ export default function GestionCasoPage() {
           </>
         }
       />
+
+      {/* Permanente, no se puede cerrar — si un caso se reasignó (ej. quien
+          lo tenía dejó la empresa), queda a la vista de cualquiera que abra
+          este caso de ahora en adelante, no solo enterrado en el historial
+          de abajo. */}
+      {reasignacion && (
+        <Card className="flex items-start gap-3 border-sky-500/40 bg-sky-500/5 p-4 text-sm">
+          <ArrowRightLeft className="mt-0.5 size-4 shrink-0 text-sky-600 dark:text-sky-400" />
+          <div>
+            <p className="font-medium text-sky-700 dark:text-sky-400">Este caso fue reasignado</p>
+            <p className="mt-0.5 text-muted-foreground">
+              {reasignacion.motivo?.replace(`${REASIGNACION_PREFIJO} `, '')} · {fmtDateTime(reasignacion.created_at)}
+            </p>
+          </div>
+        </Card>
+      )}
 
       {puedeTomarBackoffice && (
         <Card className="flex flex-col items-start gap-3 border-sky-500/40 bg-sky-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
