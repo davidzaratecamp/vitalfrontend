@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
 import { SoportePolizaCard } from '@/components/common/SoportePolizaCard'
+import { GrabacionesCard } from '@/components/common/GrabacionesCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -120,6 +121,8 @@ export default function GestionClientePage() {
       />
 
       <ClienteResumen c={cliente} />
+
+      <GrabacionesCard origen={{ clienteId: cliente.id }} />
 
       {pendiente && (
         <Card>

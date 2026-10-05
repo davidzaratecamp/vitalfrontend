@@ -9,6 +9,7 @@ import { ObservacionesCard } from '@/components/common/ObservacionesCard'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { CopyableId } from '@/components/common/CopyableId'
 import { SoporteCasoPostventaCard } from '@/components/casosPostventa/SoporteCasoPostventaCard'
+import { GrabacionesCard } from '@/components/common/GrabacionesCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -197,6 +198,9 @@ export default function GestionCasoPage() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Grabaciones de Aware — supervisor/backoffice/admin, nunca el agente. */}
+      {role !== 'agente' && <GrabacionesCard origen={{ casoId: caso.id }} />}
 
       {esSoloLectura ? (
         <>

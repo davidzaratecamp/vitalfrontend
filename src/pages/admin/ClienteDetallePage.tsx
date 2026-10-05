@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
 import { SoportePolizaCard } from '@/components/common/SoportePolizaCard'
+import { GrabacionesCard } from '@/components/common/GrabacionesCard'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -74,6 +75,8 @@ export default function ClienteDetallePage() {
       />
 
       <ClienteResumen c={cliente} />
+
+      <GrabacionesCard origen={{ clienteId: cliente.id }} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <SoportePolizaCard clienteId={cliente.id} editable={false} />
