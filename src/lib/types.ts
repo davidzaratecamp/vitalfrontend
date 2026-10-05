@@ -290,7 +290,7 @@ export interface ClienteRechazado extends ClienteListItem {
 }
 
 export interface ClienteDetalle extends Cliente {
-  agente: { id: number; name: string; email: string }
+  agente: { id: number; name: string; email: string; empresa_id: number | null }
   dependientes: Dependiente[]
   ingresos: Ingreso[]
   ingresos_totales_familia: number

@@ -88,6 +88,19 @@ export function useEliminarCliente() {
   })
 }
 
+/** Solo admin (2026-10-05, pedido del usuario) — mueve la venta a otro
+ * agente de la misma empresa, para cuando el dueño original cambia de rol
+ * o deja la empresa. Deja huella en el historial (ver reasignarAgente en
+ * clientes.service.js). */
+export function useReasignarAgente(id: string | number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ nuevo_agente_id, motivo }: { nuevo_agente_id: number; motivo?: string }) =>
+      (await api.patch<ClienteDetalle>(`/clientes/${id}/reasignar`, { nuevo_agente_id, motivo })).data,
+    onSuccess: () => invalidateCliente(qc, id),
+  })
+}
+
 /* ───────────────────────── Paso 2 — Cónyuge ───────────────────────── */
 
 export const useConyuge = (id: string | number | undefined) =>

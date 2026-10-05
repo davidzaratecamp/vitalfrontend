@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { History, Trash2 } from 'lucide-react'
+import { History, Trash2, UserCog } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
@@ -14,7 +14,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { useCliente, useEliminarCliente } from '@/hooks/clientes'
+import { SearchSelect } from '@/components/common/SearchSelect'
+import { useCliente, useEliminarCliente, useReasignarAgente } from '@/hooks/clientes'
+import { useUsuarios } from '@/hooks/usuarios'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
@@ -25,10 +27,15 @@ export default function ClienteDetallePage() {
   const navigate = useNavigate()
   const { data: cliente, isLoading } = useCliente(id)
   const eliminar = useEliminarCliente()
+  const reasignar = useReasignarAgente(id ?? '')
+  const { data: agentesTodos } = useUsuarios('agente')
   const role = useAuthStore((s) => s.user?.role)
   const esAdmin = role === 'admin'
   const [confirmBorrar, setConfirmBorrar] = useState(false)
   const [observacion, setObservacion] = useState('')
+  const [reasignarOpen, setReasignarOpen] = useState(false)
+  const [nuevoAgenteId, setNuevoAgenteId] = useState('all')
+  const [motivoReasignar, setMotivoReasignar] = useState('')
 
   if (isLoading || !cliente) return <Skeleton className="h-96 rounded-xl" />
 
@@ -37,6 +44,25 @@ export default function ClienteDetallePage() {
   // estado (2026-09-29, pedido del usuario) — pasa por un diálogo propio
   // con observación opcional en vez del ConfirmDialog genérico.
   const puedeEliminar = esAdmin || cliente.estado === 'borrador'
+  // Solo agentes activos de la MISMA empresa que el dueño actual — misma
+  // separación Vital/Vital Asiste que el resto del sistema (2026-10-05,
+  // pedido del usuario: reasignar una venta a otro agente).
+  const agentesDisponibles = (agentesTodos ?? []).filter(
+    (a) => a.is_active && a.empresa_id === cliente.agente.empresa_id && a.id !== cliente.agente_id
+  )
+
+  async function onReasignar() {
+    if (nuevoAgenteId === 'all') return
+    try {
+      await reasignar.mutateAsync({ nuevo_agente_id: Number(nuevoAgenteId), motivo: motivoReasignar.trim() || undefined })
+      toast.success('Venta reasignada')
+      setReasignarOpen(false)
+      setNuevoAgenteId('all')
+      setMotivoReasignar('')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo reasignar'))
+    }
+  }
 
   async function onEliminar() {
     if (!id) return
@@ -61,6 +87,11 @@ export default function ClienteDetallePage() {
         description="Vista 360 — solo lectura."
         actions={
           <>
+            {esAdmin && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setReasignarOpen(true)}>
+                <UserCog className="size-4" /> Reasignar a otro agente
+              </Button>
+            )}
             {puedeEliminar && (
               <Button type="button" variant="ghost" size="sm" onClick={abrirConfirmacion}>
                 <Trash2 className="size-4 text-destructive" /> {esAdmin ? 'Eliminar ID' : 'Eliminar borrador'}
@@ -147,6 +178,51 @@ export default function ClienteDetallePage() {
           loading={eliminar.isPending}
           onConfirm={onEliminar}
         />
+      )}
+
+      {esAdmin && (
+        <Dialog open={reasignarOpen} onOpenChange={setReasignarOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Reasignar a otro agente</DialogTitle>
+              <DialogDescription>
+                Pasa esta venta de <strong>{cliente.agente.name}</strong> a otro agente de la misma empresa — útil cuando
+                el dueño original cambia de rol o deja la empresa. Queda registrado en el historial.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Nuevo agente</Label>
+                <SearchSelect
+                  value={nuevoAgenteId}
+                  onValueChange={setNuevoAgenteId}
+                  options={agentesDisponibles.map((a) => ({ value: String(a.id), label: a.name }))}
+                  placeholder="Buscar agente..."
+                  allLabel="Selecciona un agente..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="motivo-reasignar">Motivo (opcional)</Label>
+                <Textarea
+                  id="motivo-reasignar"
+                  placeholder="Por qué se reasigna, si aplica..."
+                  value={motivoReasignar}
+                  onChange={(e) => setMotivoReasignar(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReasignarOpen(false)} disabled={reasignar.isPending}>
+                Cancelar
+              </Button>
+              <Button onClick={onReasignar} disabled={reasignar.isPending || nuevoAgenteId === 'all'}>
+                Reasignar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )
