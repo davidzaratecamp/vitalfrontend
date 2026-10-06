@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 export interface Grabacion {
-  registro_llamada_id: number
+  /** Id de la llamada en la central de Aware (ej. "1791225214.14890"). */
+  uniqueid: string
   proyecto_id: number
   fecha: string
   hora: string
@@ -10,6 +11,8 @@ export interface Grabacion {
   duracion: number
   campana: string | null
   agente: string | null
+  /** false = intento que Aware no dejó en su registro de gestión (solo en la central). */
+  registrada: boolean
 }
 
 export interface GrabacionesRespuesta {
@@ -33,7 +36,7 @@ export const useGrabaciones = (origen: OrigenGrabaciones) =>
   })
 
 /** Descarga el audio (MP3 ya convertido por el backend) y devuelve una URL local para <audio>. */
-export async function cargarAudioGrabacion(origen: OrigenGrabaciones, registroId: number): Promise<string> {
-  const res = await api.get(`${basePath(origen)}/audio/${registroId}`, { responseType: 'blob', timeout: 120_000 })
+export async function cargarAudioGrabacion(origen: OrigenGrabaciones, uniqueid: string): Promise<string> {
+  const res = await api.get(`${basePath(origen)}/audio/${encodeURIComponent(uniqueid)}`, { responseType: 'blob', timeout: 120_000 })
   return URL.createObjectURL(res.data as Blob)
 }

@@ -22,12 +22,12 @@ function fmtDuracion(seg: number) {
  */
 export function GrabacionesCard({ origen }: { origen: OrigenGrabaciones }) {
   const { data, isLoading, error } = useGrabaciones(origen)
-  const [activa, setActiva] = useState<{ id: number; url: string } | null>(null)
-  const [cargandoId, setCargandoId] = useState<number | null>(null)
+  const [activa, setActiva] = useState<{ id: string; url: string } | null>(null)
+  const [cargandoId, setCargandoId] = useState<string | null>(null)
 
   useEffect(() => () => { if (activa) URL.revokeObjectURL(activa.url) }, [activa])
 
-  async function escuchar(id: number) {
+  async function escuchar(id: string) {
     setCargandoId(id)
     try {
       const url = await cargarAudioGrabacion(origen, id)
@@ -59,26 +59,34 @@ export function GrabacionesCard({ origen }: { origen: OrigenGrabaciones }) {
           </p>
         ) : (
           llamadas.map((g) => (
-            <div key={g.registro_llamada_id} className="rounded-md border p-3">
+            <div key={g.uniqueid} className="rounded-md border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-sm">
                   <span className="font-medium">{fmtDate(g.fecha)} {g.hora.slice(0, 5)}</span>
                   <span className="text-muted-foreground">
                     {' · '}{g.campana ?? `Proyecto ${g.proyecto_id}`}{' · '}{fmtDuracion(g.duracion)}{g.agente ? ` · ${g.agente}` : ''}
                   </span>
+                  {!g.registrada && (
+                    <span
+                      className="ml-2 rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] text-amber-700 dark:text-amber-400"
+                      title="Intento de llamada que Aware no dejó en su registro de gestión (solo queda en la central)"
+                    >
+                      No registrada en Aware
+                    </span>
+                  )}
                 </div>
-                {activa?.id === g.registro_llamada_id ? (
+                {activa?.id === g.uniqueid ? (
                   <Button type="button" variant="ghost" size="sm" onClick={() => setActiva(null)}>
                     <X className="size-4" /> Cerrar
                   </Button>
                 ) : (
-                  <Button type="button" variant="outline" size="sm" disabled={cargandoId !== null} onClick={() => escuchar(g.registro_llamada_id)}>
-                    {cargandoId === g.registro_llamada_id ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-                    {cargandoId === g.registro_llamada_id ? 'Cargando…' : 'Escuchar'}
+                  <Button type="button" variant="outline" size="sm" disabled={cargandoId !== null} onClick={() => escuchar(g.uniqueid)}>
+                    {cargandoId === g.uniqueid ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+                    {cargandoId === g.uniqueid ? 'Cargando…' : 'Escuchar'}
                   </Button>
                 )}
               </div>
-              {activa?.id === g.registro_llamada_id && (
+              {activa?.id === g.uniqueid && (
                 <audio className="mt-2 w-full" controls autoPlay src={activa.url} />
               )}
             </div>
