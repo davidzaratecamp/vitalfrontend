@@ -66,14 +66,7 @@ export function GrabacionesCard({ origen }: { origen: OrigenGrabaciones }) {
                   <span className="text-muted-foreground">
                     {' · '}{g.campana ?? `Proyecto ${g.proyecto_id}`}{' · '}{fmtDuracion(g.duracion)}{g.agente ? ` · ${g.agente}` : ''}
                   </span>
-                  {!g.registrada && (
-                    <span
-                      className="ml-2 rounded bg-amber-500/10 px-1.5 py-0.5 text-[11px] text-amber-700 dark:text-amber-400"
-                      title="Intento de llamada que Aware no dejó en su registro de gestión (solo queda en la central)"
-                    >
-                      No registrada en Aware
-                    </span>
-                  )}
+
                 </div>
                 {activa?.id === g.uniqueid ? (
                   <Button type="button" variant="ghost" size="sm" onClick={() => setActiva(null)}>
