@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { HeartPulse, Moon, Sun, LogOut, User as UserIcon } from 'lucide-react'
+import { HeartPulse, Moon, Sun, LogOut, User as UserIcon, Cat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { UserAvatar } from '@/components/common/UserAvatar'
 import { NotificationBell } from './NotificationBell'
+import { GatoRunnerGame } from '@/components/game/GatoRunnerGame'
 import type { NavItem } from './Sidebar'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
@@ -77,6 +80,12 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
   const navigate = useNavigate()
   const location = useLocation()
   const isDark = document.documentElement.classList.contains('dark')
+  // Minijuego "Gato Runner" (2026-09-29, pedido del usuario) — ícono
+  // discreto, no una pestaña del menú, y solo visible para agente (así se
+  // decidió a propósito: en un call center a veces hay supervisores
+  // mirando pantallas). Para dar acceso a otro rol, sumarlo acá.
+  const [juegoAbierto, setJuegoAbierto] = useState(false)
+  const puedeJugar = user?.role === 'agente'
 
   // Grupos declarados en `items` (ej. "Ventas"/"Postventa"), en el orden en
   // que aparecen — vacío si el rol no usa `group`, y ahí no cambia nada de
@@ -120,6 +129,12 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
 
         <NotificationBell />
 
+        {puedeJugar && (
+          <Button variant="ghost" size="icon" onClick={() => setJuegoAbierto(true)} title="Pausa">
+            <Cat className="size-4" />
+          </Button>
+        )}
+
         <Button variant="ghost" size="icon" onClick={toggleTheme} title="Cambiar tema">
           {isDark || theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </Button>
@@ -156,6 +171,20 @@ export function TopNav({ items, roleLabel }: { items: NavItem[]; roleLabel: stri
       <nav className="flex items-center gap-1 overflow-x-auto border-t px-4 py-1.5 md:hidden">
         <NavItems items={itemsVisibles} />
       </nav>
+
+      {puedeJugar && (
+        <Dialog open={juegoAbierto} onOpenChange={setJuegoAbierto}>
+          <DialogContent className="max-w-[940px] p-4 sm:p-5">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base"><Cat className="size-4" /> Gato Runner</DialogTitle>
+            </DialogHeader>
+            {/* `active` = solo corre el loop del juego mientras el diálogo
+                está abierto — al cerrar, se desmonta el canvas y se limpian
+                los listeners (ver GatoRunnerGame.tsx). */}
+            <GatoRunnerGame active={juegoAbierto} />
+          </DialogContent>
+        </Dialog>
+      )}
     </header>
   )
 }
