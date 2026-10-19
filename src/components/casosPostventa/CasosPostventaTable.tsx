@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCasosPostventa, descargarCasosPostventaExcel } from '@/hooks/casosPostventa'
 import { TIPO_CASO_POSTVENTA, TIPO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_COLOR, TIPO_GESTION_POSTVENTA, TIPO_GESTION_POSTVENTA_LABEL, TIPO_GESTION_POSTVENTA_COLOR } from '@/lib/casosPostventaConstants'
+import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/lib/api'
 import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
 import type { EstadoCasoPostventa } from '@/lib/types'
@@ -66,6 +67,11 @@ export function CasosPostventaTable({
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [descargando, setDescargando] = useState(false)
+  // El export es para quien supervisa/gestiona, no para el agente
+  // (2026-10-19, pedido del usuario) — el backend también lo bloquea,
+  // esto solo evita mostrar un botón que iba a dar 403.
+  const role = useAuthStore((st) => st.user?.role)
+  const puedeExportar = role === 'admin' || role === 'supervisor' || role === 'backoffice'
 
   const estados = estado === 'all' ? estadosBase : [estado]
   const { data: dataCompleta, isLoading } = useCasosPostventa({
@@ -117,10 +123,12 @@ export function CasosPostventaTable({
         title={title}
         description={description}
         actions={
-          <Button variant="outline" onClick={exportar} disabled={descargando}>
-            {descargando ? <FileSpreadsheet className="size-4 animate-pulse" /> : <Download className="size-4" />}
-            {descargando ? 'Generando...' : 'Exportar Excel'}
-          </Button>
+          puedeExportar ? (
+            <Button variant="outline" onClick={exportar} disabled={descargando}>
+              {descargando ? <FileSpreadsheet className="size-4 animate-pulse" /> : <Download className="size-4" />}
+              {descargando ? 'Generando...' : 'Exportar Excel'}
+            </Button>
+          ) : undefined
         }
       />
 
