@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { toast } from 'sonner'
+import { Download, FileSpreadsheet, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -10,8 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useCasosPostventa } from '@/hooks/casosPostventa'
+import { useCasosPostventa, descargarCasosPostventaExcel } from '@/hooks/casosPostventa'
 import { TIPO_CASO_POSTVENTA, TIPO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_LABEL, ESTADO_CASO_POSTVENTA_COLOR, TIPO_GESTION_POSTVENTA, TIPO_GESTION_POSTVENTA_LABEL, TIPO_GESTION_POSTVENTA_COLOR } from '@/lib/casosPostventaConstants'
+import { apiErrorMessage } from '@/lib/api'
 import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
 import type { EstadoCasoPostventa } from '@/lib/types'
 
@@ -63,6 +65,7 @@ export function CasosPostventaTable({
   const [rolGestion, setRolGestion] = useState('all')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
+  const [descargando, setDescargando] = useState(false)
 
   const estados = estado === 'all' ? estadosBase : [estado]
   const { data: dataCompleta, isLoading } = useCasosPostventa({
@@ -77,6 +80,27 @@ export function CasosPostventaTable({
 
   const hayFiltros = !!q || estado !== 'all' || tipoCaso !== 'all' || tipoGestion !== 'all' || rolGestion !== 'all' || !!desde || !!hasta
 
+  // Export de la vista actual — manda los mismos filtros que la tabla, el
+  // backend aplica la misma visibilidad por rol (2026-10-19, pedido del
+  // usuario: "habilitarme un Export en el apartado de Postventa").
+  async function exportar() {
+    setDescargando(true)
+    try {
+      await descargarCasosPostventaExcel({
+        estados,
+        q: q || undefined,
+        tipo_caso: tipoCaso === 'all' ? undefined : tipoCaso,
+        tipo_gestion: tipoGestion === 'all' ? undefined : tipoGestion,
+        desde: desde || undefined,
+        hasta: hasta || undefined,
+      })
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo exportar'))
+    } finally {
+      setDescargando(false)
+    }
+  }
+
   function limpiar() {
     setQ('')
     setEstado('all')
@@ -89,7 +113,16 @@ export function CasosPostventaTable({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={title} description={description} />
+      <PageHeader
+        title={title}
+        description={description}
+        actions={
+          <Button variant="outline" onClick={exportar} disabled={descargando}>
+            {descargando ? <FileSpreadsheet className="size-4 animate-pulse" /> : <Download className="size-4" />}
+            {descargando ? 'Generando...' : 'Exportar Excel'}
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="relative">

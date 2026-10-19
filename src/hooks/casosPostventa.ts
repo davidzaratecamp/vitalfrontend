@@ -59,6 +59,31 @@ export const useCasosPostventa = (filters: CasosPostventaFilters = {}) =>
     refetchInterval: 30_000,
   })
 
+/** Export a Excel de la vista actual de Postventa (2026-10-19, pedido del
+ * usuario) — manda los MISMOS filtros que la tabla, y el backend aplica la
+ * misma visibilidad por rol (ver streamCasosPostventaExcel). */
+export async function descargarCasosPostventaExcel(filters: CasosPostventaFilters = {}) {
+  const res = await api.get('/casos-postventa/export.xlsx', {
+    params: {
+      estados: filters.estados?.length ? filters.estados.join(',') : undefined,
+      q: filters.q,
+      tipo_caso: filters.tipo_caso,
+      tipo_gestion: filters.tipo_gestion,
+      desde: filters.desde,
+      hasta: filters.hasta,
+    },
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(res.data as Blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `postventa_vital_${filters.desde ?? ''}_${filters.hasta ?? ''}.xlsx`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const useCasoPostventa = (id: string | number | undefined) =>
   useQuery({
     queryKey: ['casos-postventa', 'detalle', id],
