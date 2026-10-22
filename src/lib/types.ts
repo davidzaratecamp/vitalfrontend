@@ -107,7 +107,6 @@ export interface Cliente {
   horario_contactabilidad: string | null
   contacto_emergencia_nombre: string | null
   contacto_emergencia_telefono: string | null
-  contacto_emergencia_email: string | null
   origen_venta: 'lead' | 'referido' | 'base'
   pregunta_seguridad: string | null
   submitted_at: string | null

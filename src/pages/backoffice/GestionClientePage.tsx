@@ -17,6 +17,7 @@ import { useCliente } from '@/hooks/clientes'
 import { useAseguradoras } from '@/hooks/catalogos'
 import { useCompletar, useRechazar, useHistorialBackoffice, usePendienteTripartita } from '@/hooks/backoffice'
 import { apiErrorMessage } from '@/lib/api'
+import { enMayusculas } from '@/lib/mayusculas'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, ESTADO_PRIMA } from '@/lib/clienteConstants'
 import { fmtDateTime } from '@/lib/dateFormat'
 
@@ -63,7 +64,11 @@ export default function GestionClientePage() {
   // Pasar a "pendiente llamada tripartita" solo tiene sentido DESDE la cola
   // normal (no tiene caso volver a marcarlo si ya está ahí).
   const puedeMarcarTripartita = cliente.estado === 'pendiente_backoffice'
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
+  // Mismos campos del plan que llena el agente — mismo trato de
+  // MAYÚSCULAS (ver lib/mayusculas.ts). El motivo de rechazo y las
+  // observaciones usan su propio estado y quedan como se escriben.
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [k]: enMayusculas(k as string, v) }))
 
   async function onCompletar(e: React.FormEvent) {
     e.preventDefault()

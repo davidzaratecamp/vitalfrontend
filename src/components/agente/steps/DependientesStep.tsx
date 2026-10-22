@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormField } from '../FormField'
 import { useDependientes, useAgregarDependiente, useEliminarDependiente } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
+import { enMayusculas } from '@/lib/mayusculas'
 import { SEXO, ESTATUS_MIGRATORIO, PARENTESCO } from '@/lib/clienteConstants'
 import { fmtDate } from '@/lib/dateFormat'
 
@@ -31,7 +32,10 @@ export function DependientesStep({ clienteId, editable }: { clienteId: number; e
   const [form, setForm] = useState(empty)
   const [showForm, setShowForm] = useState(false)
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
+  // Los campos de texto del formulario quedan en MAYÚSCULAS a medida que se
+  // escriben (ver lib/mayusculas.ts) — el backend los normaliza igual.
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [k]: enMayusculas(k as string, v) }))
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()

@@ -91,13 +91,12 @@ export function ClienteResumen({ c, seccionesActualizadas }: { c: ClienteDetalle
           />
           <Row label="Agente" value={c.agente?.name} />
         </CardContent>
-        {(c.contacto_emergencia_nombre || c.contacto_emergencia_telefono || c.contacto_emergencia_email) && (
+        {(c.contacto_emergencia_nombre || c.contacto_emergencia_telefono) && (
           <CardContent className="border-t pt-3">
             <p className="mb-1.5 text-xs font-medium text-muted-foreground">Contacto de emergencia</p>
             <div className="divide-y">
               <Row label="Nombre" value={c.contacto_emergencia_nombre} />
               <Row label="Teléfono" value={c.contacto_emergencia_telefono} />
-              <Row label="Correo" value={c.contacto_emergencia_email} />
             </div>
           </CardContent>
         )}

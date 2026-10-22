@@ -11,6 +11,7 @@ import { FormField } from '../FormField'
 import { LocationSelector } from '../LocationSelector'
 import { useCrearCliente, useActualizarTitular, useVerificarDuplicado } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
+import { enMayusculas } from '@/lib/mayusculas'
 import { SEXO, ESTATUS_MIGRATORIO, ORIGEN_VENTA, ORIGEN_VENTA_LABEL, ESTADO_CLIENTE_LABEL } from '@/lib/clienteConstants'
 import type { Cliente } from '@/lib/types'
 
@@ -35,7 +36,6 @@ const empty = {
   horario_contactabilidad: '',
   contacto_emergencia_nombre: '',
   contacto_emergencia_telefono: '',
-  contacto_emergencia_email: '',
   origen_venta: '',
   pregunta_seguridad: '',
   respuesta_seguridad: '',
@@ -101,14 +101,16 @@ export function TitularStep({
       horario_contactabilidad: cliente.horario_contactabilidad ?? '',
       contacto_emergencia_nombre: cliente.contacto_emergencia_nombre ?? '',
       contacto_emergencia_telefono: cliente.contacto_emergencia_telefono ?? '',
-      contacto_emergencia_email: cliente.contacto_emergencia_email ?? '',
       origen_venta: cliente.origen_venta,
       pregunta_seguridad: cliente.pregunta_seguridad ?? '',
       respuesta_seguridad: '',
     })
   }, [cliente])
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
+  // Los campos de texto del formulario quedan en MAYÚSCULAS a medida que se
+  // escriben (ver lib/mayusculas.ts) — el backend los normaliza igual.
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [k]: enMayusculas(k as string, v) }))
   const edad = edadDe(form.fecha_nacimiento)
 
   // Aviso de posible duplicado (mismo SSN o correo) — solo tiene sentido al
@@ -142,7 +144,6 @@ export function TitularStep({
       if (!body.horario_contactabilidad) body.horario_contactabilidad = null
       if (!body.contacto_emergencia_nombre) body.contacto_emergencia_nombre = null
       if (!body.contacto_emergencia_telefono) body.contacto_emergencia_telefono = null
-      if (!body.contacto_emergencia_email) body.contacto_emergencia_email = null
 
       if (cliente) {
         await actualizar.mutateAsync(body)
@@ -233,7 +234,7 @@ export function TitularStep({
           estado={form.estado_us}
           condado={form.condado}
           ciudad={form.ciudad}
-          onChange={(next) => setForm((f) => ({ ...f, estado_us: next.estado, condado: next.condado, ciudad: next.ciudad }))}
+          onChange={(next) => setForm((f) => ({ ...f, estado_us: next.estado, condado: next.condado.toUpperCase(), ciudad: next.ciudad }))}
           disabled={!editable}
         />
       </div>
@@ -263,15 +264,14 @@ export function TitularStep({
 
       <div className="rounded-lg border border-dashed p-4">
         <p className="mb-3 text-sm font-medium">Contacto de emergencia (opcional)</p>
-        <div className="grid gap-4 sm:grid-cols-3">
+        {/* El correo salió del formulario el 2026-10-22 a pedido del usuario
+            — quedan solo nombre y teléfono. */}
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Nombre">
             <Input value={form.contacto_emergencia_nombre} onChange={(e) => set('contacto_emergencia_nombre', e.target.value)} disabled={!editable} />
           </FormField>
           <FormField label="Teléfono">
             <Input value={form.contacto_emergencia_telefono} onChange={(e) => set('contacto_emergencia_telefono', e.target.value)} disabled={!editable} />
-          </FormField>
-          <FormField label="Correo">
-            <Input type="email" value={form.contacto_emergencia_email} onChange={(e) => set('contacto_emergencia_email', e.target.value)} disabled={!editable} />
           </FormField>
         </div>
       </div>

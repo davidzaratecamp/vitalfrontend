@@ -8,6 +8,7 @@ import { FormField } from '../FormField'
 import { CardPreview } from '@/components/common/CardPreview'
 import { usePago, useSetPago } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
+import { enMayusculas } from '@/lib/mayusculas'
 import { detectarMarcaTarjeta, formatearTarjeta } from '@/lib/card'
 import { METODO_PAGO, METODO_PAGO_LABEL, MESES_EXPIRACION, aniosExpiracion } from '@/lib/clienteConstants'
 
@@ -62,7 +63,10 @@ export function PagoStep({
     })
   }, [pago])
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }))
+  // Los campos de texto del formulario quedan en MAYÚSCULAS a medida que se
+  // escriben (ver lib/mayusculas.ts) — el backend los normaliza igual.
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [k]: enMayusculas(k as string, v) }))
 
   const marcaEnVivo = numeroTarjeta ? detectarMarcaTarjeta(numeroTarjeta) : pago?.marca_tarjeta ?? null
   const ultimos4EnVivo = numeroTarjeta ? numeroTarjeta.slice(-4) : pago?.ultimos_4_digitos ?? ''

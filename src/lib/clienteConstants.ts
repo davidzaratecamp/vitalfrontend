@@ -9,6 +9,11 @@
 // datos de tarjeta) y clientes.constants.js#EMPRESA_VITAL_ASISTE_ID.
 export const EMPRESA_VITAL_ASISTE_ID = 2
 
+// Lo seleccionable hoy. 'PAROLE HUMANITARIO' salió del catálogo el
+// 2026-10-22 (pedido del usuario) pero sigue existiendo en la base para los
+// registros viejos que ya lo tenían — por eso se ve en un registro antiguo
+// aunque ya no aparezca en el desplegable. Ver
+// ESTATUS_MIGRATORIO_HISTORICOS en clientes.constants.js.
 export const ESTATUS_MIGRATORIO = [
   'RESIDENTE',
   'CIUDADANO',
@@ -17,10 +22,11 @@ export const ESTATUS_MIGRATORIO = [
   'VISA DE TRABAJO',
   'ASILO/REFUGIADO',
   'ASILO/POLITICO',
-  'PAROLE HUMANITARIO',
   'TPS',
   'GREEN CARD',
   'I-220A',
+  'I-797 (PROCESO PERMISO DE TRABAJO)',
+  'I-797 (PROCESO RESIDENCIA)',
 ]
 
 export const SEXO = ['Masculino', 'Femenino'] as const
