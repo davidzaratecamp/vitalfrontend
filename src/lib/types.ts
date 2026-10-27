@@ -65,6 +65,13 @@ export type EstadoCliente =
   | 'pendiente_llamada_tripartita'
   | 'aprobado'
   | 'rechazado_backoffice'
+  // Renovaciones (2026-10-27) — la misma venta, con el mismo ID, vuelve al
+  // agente cada 1 de noviembre. Ver ESTADOS_RENOVACION en clienteConstants.
+  | 'pendiente_renovacion'
+  | 'pendiente_backoffice_renovacion'
+  | 'pendiente_autorizacion_renovacion'
+  | 'rechazado_backoffice_renovacion'
+  | 'renovado'
 
 export interface Aseguradora {
   id: number
@@ -110,8 +117,49 @@ export interface Cliente {
   origen_venta: 'lead' | 'referido' | 'base'
   pregunta_seguridad: string | null
   submitted_at: string | null
+  /** Temporada (año del 1 de noviembre) en que entró a renovación por
+   * última vez — null si nunca pasó por una. */
+  renovacion_anio: number | null
+  /** Cuándo entró a la temporada actual: la carta CMS tiene que ser
+   * posterior a esta fecha y las evidencias anteriores no se borran. */
+  renovacion_iniciada_at: string | null
   created_at: string
   updated_at: string
+}
+
+export interface RenovacionListItem {
+  id: number
+  nombres: string
+  apellidos: string
+  correo_electronico: string
+  phone_1: string
+  estado: string
+  renovacion_anio: number | null
+  renovacion_iniciada_at: string | null
+  submitted_at: string | null
+  updated_at: string
+  agente_nombre: string | null
+  empresa_nombre: string | null
+}
+
+export interface ResumenTemporada {
+  temporada: number
+  abre: string
+  por_entrar: number
+  por_estado: Record<string, number>
+}
+
+export interface CambioCliente {
+  id: number
+  seccion: string
+  referencia_id: number | null
+  campo: string
+  valor_anterior: string | null
+  valor_nuevo: string | null
+  contexto: 'venta' | 'renovacion' | 'postventa'
+  created_at: string
+  cambiado_por_nombre: string | null
+  cambiado_por_rol: string | null
 }
 
 export interface Dependiente {

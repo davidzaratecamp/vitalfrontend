@@ -18,7 +18,14 @@ import { useAseguradoras } from '@/hooks/catalogos'
 import { useCompletar, useRechazar, useHistorialBackoffice, usePendienteTripartita } from '@/hooks/backoffice'
 import { apiErrorMessage } from '@/lib/api'
 import { enMayusculas } from '@/lib/mayusculas'
-import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, ESTADO_PRIMA } from '@/lib/clienteConstants'
+import {
+  ESTADO_CLIENTE_LABEL,
+  ESTADO_CLIENTE_COLOR,
+  ESTADO_PRIMA,
+  ESTADOS_RENOVACION_BACKOFFICE,
+  esRenovacion,
+} from '@/lib/clienteConstants'
+import { HistorialCambiosCard } from '@/components/renovaciones/HistorialCambiosCard'
 import { fmtDateTime } from '@/lib/dateFormat'
 
 export default function GestionClientePage() {
@@ -60,10 +67,21 @@ export default function GestionClientePage() {
   // El caso se puede cerrar (completar/rechazar) tanto desde la cola normal
   // como desde "pendiente llamada tripartita" — ese estado es solo una
   // parada intermedia, no le quita a BackOffice la posibilidad de cerrarlo.
-  const pendiente = cliente.estado === 'pendiente_backoffice' || cliente.estado === 'pendiente_llamada_tripartita'
-  // Pasar a "pendiente llamada tripartita" solo tiene sentido DESDE la cola
-  // normal (no tiene caso volver a marcarlo si ya está ahí).
-  const puedeMarcarTripartita = cliente.estado === 'pendiente_backoffice'
+  // Esta MISMA pantalla gestiona ventas y renovaciones (2026-10-27) — los
+  // endpoints son los mismos y el backend resuelve el estado destino según
+  // de dónde venga el caso (ver DESTINOS en backoffice.service.js). Acá
+  // solo cambian las palabras: "venta/aprobar" vs "renovación/renovar", y
+  // la parada intermedia pasa a llamarse "pendiente autorización".
+  const renov = esRenovacion(cliente.estado)
+  const pendiente =
+    cliente.estado === 'pendiente_backoffice' ||
+    cliente.estado === 'pendiente_llamada_tripartita' ||
+    ESTADOS_RENOVACION_BACKOFFICE.includes(cliente.estado)
+  // La parada intermedia solo tiene sentido DESDE la cola (no tiene caso
+  // volver a marcarlo si ya está ahí).
+  const puedeMarcarTripartita =
+    cliente.estado === 'pendiente_backoffice' || cliente.estado === 'pendiente_backoffice_renovacion'
+  const etiquetaIntermedio = renov ? 'Pendiente autorización renovación' : 'Pendiente llamada tripartita'
   // Mismos campos del plan que llena el agente — mismo trato de
   // MAYÚSCULAS (ver lib/mayusculas.ts). El motivo de rechazo y las
   // observaciones usan su propio estado y quedan como se escriben.
@@ -81,8 +99,10 @@ export default function GestionClientePage() {
         npn: form.npn,
         estado_prima: form.estado_prima,
       })
-      toast.success('Venta aprobada')
-      navigate('/')
+      toast.success(renov ? 'Póliza renovada' : 'Venta aprobada')
+      // Vuelve a la lista de donde salió el caso, no siempre a la cola de
+      // ventas — si no, BackOffice pierde el hilo al cerrar una renovación.
+      navigate(renov ? '/renovaciones' : '/')
     } catch (err) {
       toast.error(apiErrorMessage(err, 'Completa los 6 campos de póliza'))
     }
@@ -91,9 +111,9 @@ export default function GestionClientePage() {
   async function onRechazar() {
     try {
       await rechazar.mutateAsync(motivo)
-      toast.success('Registro rechazado, vuelve al agente')
+      toast.success(renov ? 'Renovación rechazada, vuelve al agente' : 'Registro rechazado, vuelve al agente')
       setConfirmRechazo(false)
-      navigate('/')
+      navigate(renov ? '/renovaciones' : '/')
     } catch (err) {
       toast.error(apiErrorMessage(err))
     }
@@ -102,9 +122,9 @@ export default function GestionClientePage() {
   async function onMarcarTripartita() {
     try {
       await marcarTripartita.mutateAsync(motivoTripartita || undefined)
-      toast.success('Marcado como pendiente llamada tripartita')
+      toast.success(`Marcado como ${etiquetaIntermedio.toLowerCase()}`)
       setConfirmTripartita(false)
-      navigate('/')
+      navigate(renov ? '/renovaciones' : '/')
     } catch (err) {
       toast.error(apiErrorMessage(err))
     }
@@ -127,11 +147,18 @@ export default function GestionClientePage() {
 
       <ClienteResumen c={cliente} />
 
+      {/* En una renovación lo primero que BackOffice necesita saber es QUÉ
+          cambió el agente respecto de la venta original — por eso va arriba
+          del todo y filtrado a esta renovación. */}
+      {renov && <HistorialCambiosCard clienteId={cliente.id} contexto="renovacion" titulo="Qué cambió el agente en esta renovación" />}
+
       <GrabacionesCard origen={{ clienteId: cliente.id }} />
 
       {pendiente && (
         <Card>
-          <CardHeader><CardTitle className="text-base">Cerrar gestión de la venta</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-base">{renov ? 'Cerrar gestión de la renovación' : 'Cerrar gestión de la venta'}</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-5">
             <form onSubmit={onCompletar} noValidate className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -168,14 +195,17 @@ export default function GestionClientePage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button type="submit" disabled={completar.isPending}>
-                  <CheckCircle2 className="size-4" /> {completar.isPending ? 'Aprobando...' : 'Completar y aprobar'}
+                  <CheckCircle2 className="size-4" />{' '}
+                  {completar.isPending
+                    ? renov ? 'Renovando...' : 'Aprobando...'
+                    : renov ? 'Completar y renovar' : 'Completar y aprobar'}
                 </Button>
                 <Button type="button" variant="destructive" onClick={() => setConfirmRechazo(true)}>
                   <XCircle className="size-4" /> Rechazar
                 </Button>
                 {puedeMarcarTripartita && (
                   <Button type="button" variant="outline" onClick={() => setConfirmTripartita(true)}>
-                    <PhoneCall className="size-4" /> Pendiente llamada tripartita
+                    <PhoneCall className="size-4" /> {etiquetaIntermedio}
                   </Button>
                 )}
               </div>
@@ -197,7 +227,12 @@ export default function GestionClientePage() {
             {confirmTripartita && (
               <div className="space-y-2 rounded-lg border border-sky-500/30 bg-sky-500/5 p-4">
                 <label className="text-sm font-medium">Nota (opcional)</label>
-                <Textarea value={motivoTripartita} onChange={(e) => setMotivoTripartita(e.target.value)} rows={3} placeholder="Qué falta coordinar en la llamada..." />
+                <Textarea
+                  value={motivoTripartita}
+                  onChange={(e) => setMotivoTripartita(e.target.value)}
+                  rows={3}
+                  placeholder={renov ? 'Qué autorización falta...' : 'Qué falta coordinar en la llamada...'}
+                />
                 <div className="flex gap-2">
                   <Button size="sm" disabled={marcarTripartita.isPending} onClick={onMarcarTripartita}>
                     {marcarTripartita.isPending ? 'Guardando...' : 'Confirmar'}

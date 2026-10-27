@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, Trash2 } from 'lucide-react'
+import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, Trash2, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { ObservacionesCard } from '@/components/common/ObservacionesCard'
@@ -22,9 +22,18 @@ import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar, useEliminarCliente } from '@/hooks/clientes'
 import { useFirmas } from '@/hooks/firmas'
+import { useFinalizarRenovacion } from '@/hooks/renovaciones'
+import { HistorialCambiosCard } from '@/components/renovaciones/HistorialCambiosCard'
 import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
-import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, CATEGORIA_EVIDENCIA_OBLIGATORIA, ESTADOS_EN_TRAMITE } from '@/lib/clienteConstants'
+import {
+  ESTADO_CLIENTE_LABEL,
+  ESTADO_CLIENTE_COLOR,
+  CATEGORIA_EVIDENCIA_OBLIGATORIA,
+  ESTADOS_EN_TRAMITE,
+  ESTADOS_RENOVACION,
+  ESTADOS_RENOVACION_AGENTE,
+} from '@/lib/clienteConstants'
 
 export default function NuevoRegistroPage() {
   const { id } = useParams()
@@ -55,6 +64,7 @@ export default function NuevoRegistroPage() {
   // refrescó).
   const firmas = useFirmas(cliente?.id)
   const finalizar = useFinalizar(id ?? 0)
+  const finalizarRenov = useFinalizarRenovacion(id ?? 0)
   const eliminar = useEliminarCliente()
   const [confirmBorrar, setConfirmBorrar] = useState(false)
   // Todos los hooks van antes de los `return` de abajo — si no, React se
@@ -89,6 +99,12 @@ export default function NuevoRegistroPage() {
   // editable pero NO se vuelve a "finalizar" (el backend lo rechazaría,
   // finalizar() sigue exigiendo uno de estos dos estados a propósito).
   const puedeFinalizar = !cliente || cliente.estado === 'borrador' || cliente.estado === 'rechazado_backoffice'
+  // Esta MISMA pantalla sirve para renovar (2026-10-27): una renovación no
+  // es un registro nuevo, es la venta de siempre con el mismo ID en otro
+  // estado, así que se reusa el formulario completo en vez de duplicarlo.
+  // Lo único distinto es a dónde se envía al terminar y qué se exige.
+  const esRenov = !!cliente && ESTADOS_RENOVACION.includes(cliente.estado)
+  const puedeEnviarRenovacion = !!cliente && ESTADOS_RENOVACION_AGENTE.includes(cliente.estado)
   const clienteId = cliente?.id
   // El motivo vive en el historial de estados, no en el cliente directo —
   // viene ordenado del más reciente al más viejo (getClienteDetalle), así
@@ -96,6 +112,7 @@ export default function NuevoRegistroPage() {
   // reportado por el usuario: el agente no tenía cómo ver la imagen de
   // soporte del rechazo desde acá, solo desde la lista aparte "Rechazados").
   const motivoRechazo = cliente?.historial.find((h) => h.estado_nuevo === 'rechazado_backoffice')?.motivo
+  const motivoRechazoRenov = cliente?.historial.find((h) => h.estado_nuevo === 'rechazado_backoffice_renovacion')?.motivo
 
   const ingresoTitularOk = ingresos.data?.rows.some((r) => r.dependiente_id == null)
   // "Subir venta" (Finalizar) exige que el cliente ya haya firmado la carta
@@ -124,6 +141,24 @@ export default function NuevoRegistroPage() {
     }
   }
 
+  /** Enviar la renovación a BackOffice — el equivalente de "Finalizar" de
+   * una venta, pero por su propio endpoint: exige una carta CMS firmada
+   * NUEVA (la de la venta original no cuenta) y deja la póliza en
+   * "Pendiente BackOffice renovación". */
+  async function onEnviarRenovacion() {
+    try {
+      await finalizarRenov.mutateAsync()
+      toast.success(
+        cliente?.estado === 'rechazado_backoffice_renovacion'
+          ? 'Renovación reenviada a BackOffice'
+          : 'Renovación enviada a BackOffice'
+      )
+      navigate('/renovaciones')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Faltan pasos por completar'))
+    }
+  }
+
   async function onEliminar() {
     if (!clienteId) return
     try {
@@ -142,7 +177,11 @@ export default function NuevoRegistroPage() {
         description={
           cliente?.estado === 'rechazado_backoffice'
             ? 'BackOffice rechazó este registro — corrige lo necesario y reenvía.'
-            : 'Completa los 7 pasos. Cada paso se guarda por separado; puedes cerrar y continuar luego.'
+            : cliente?.estado === 'rechazado_backoffice_renovacion'
+              ? 'BackOffice rechazó esta renovación — corrige lo necesario y reenvíala.'
+              : esRenov
+                ? `Renovación ${cliente?.renovacion_anio ?? ''} — los datos vienen de la venta original. Cambia solo lo que haga falta y suma los documentos nuevos.`
+                : 'Completa los 7 pasos. Cada paso se guarda por separado; puedes cerrar y continuar luego.'
         }
         actions={
           cliente && (
@@ -161,6 +200,33 @@ export default function NuevoRegistroPage() {
           )
         }
       />
+
+      {esRenov && (
+        <Card className="space-y-2 border-violet-500/40 bg-violet-500/5 p-4 text-sm">
+          <p className="flex items-center gap-2 font-medium">
+            <RefreshCw className="size-4" /> Esta póliza está en renovación (temporada {cliente?.renovacion_anio ?? '—'})
+          </p>
+          <p className="text-muted-foreground">
+            Es la misma venta, con el mismo ID — los formularios ya vienen llenos con lo que se guardó. Cambia solo lo
+            que el cliente necesite y agrega los documentos nuevos: <span className="font-medium text-foreground">los
+            documentos que ya estaban no se pueden eliminar</span>, solo se suman. Todo lo que modifiques queda
+            registrado abajo.
+          </p>
+          {puedeEnviarRenovacion && (
+            <p className="rounded-md bg-background/60 px-2.5 py-1.5 text-muted-foreground">
+              Para enviarla a BackOffice hace falta una <span className="font-medium text-foreground">carta CMS nueva,
+              firmada en esta renovación</span> — la firma de la venta original no cuenta.
+            </p>
+          )}
+          {motivoRechazoRenov && cliente?.estado === 'rechazado_backoffice_renovacion' && (
+            <p className="rounded-md bg-background/60 px-2.5 py-1.5">
+              <span className="font-medium">Motivo del rechazo:</span> {motivoRechazoRenov}
+            </p>
+          )}
+        </Card>
+      )}
+
+      {esRenov && clienteId && <HistorialCambiosCard clienteId={clienteId} contexto="renovacion" titulo="Qué se ha cambiado en esta renovación" />}
 
       {cliente?.estado === 'rechazado_backoffice' && (
         <>
@@ -318,6 +384,24 @@ export default function NuevoRegistroPage() {
           <Button onClick={onFinalizar} disabled={finalizar.isPending || !firmaFirmada}>
             <CheckCircle2 className="size-4" />
             {finalizar.isPending ? 'Enviando...' : cliente?.estado === 'rechazado_backoffice' ? 'Reenviar a BackOffice' : 'Finalizar y enviar a BackOffice'}
+          </Button>
+        </Card>
+      )}
+
+      {puedeEnviarRenovacion && clienteId && (
+        <Card className="flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            {firmaFirmada
+              ? 'Cuando esté todo revisado, envía la renovación a BackOffice.'
+              : 'Falta la carta CMS firmada por el cliente en esta renovación — envíala arriba y usa "Actualizar estado" apenas firme.'}
+          </p>
+          <Button onClick={onEnviarRenovacion} disabled={finalizarRenov.isPending}>
+            <RefreshCw className="size-4" />
+            {finalizarRenov.isPending
+              ? 'Enviando...'
+              : cliente?.estado === 'rechazado_backoffice_renovacion'
+                ? 'Reenviar renovación a BackOffice'
+                : 'Enviar renovación a BackOffice'}
           </Button>
         </Card>
       )}

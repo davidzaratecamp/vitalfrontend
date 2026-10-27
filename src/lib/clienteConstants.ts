@@ -79,6 +79,11 @@ export const ESTADO_CLIENTE_LABEL: Record<string, string> = {
   pendiente_llamada_tripartita: 'Pendiente llamada tripartita',
   aprobado: 'Aprobado',
   rechazado_backoffice: 'Rechazado por BackOffice',
+  pendiente_renovacion: 'Pendiente renovación',
+  pendiente_backoffice_renovacion: 'Pendiente BackOffice renovación',
+  pendiente_autorizacion_renovacion: 'Pendiente autorización renovación',
+  rechazado_backoffice_renovacion: 'Rechazo BackOffice renovación',
+  renovado: 'Renovado',
 }
 
 export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
@@ -87,6 +92,15 @@ export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
   pendiente_llamada_tripartita: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
   aprobado: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   rechazado_backoffice: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  // Los estados de renovación usan la misma familia de color que su
+  // equivalente de venta (ámbar = en cola, celeste = parada intermedia,
+  // rojo = rechazo) pero en violeta para "Renovado", que es el cierre del
+  // ciclo y no debe confundirse de un vistazo con un "Aprobado" de venta.
+  pendiente_renovacion: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+  pendiente_backoffice_renovacion: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  pendiente_autorizacion_renovacion: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+  rechazado_backoffice_renovacion: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  renovado: 'bg-violet-600/15 text-violet-700 dark:text-violet-300',
 }
 
 // Espejo de ESTADOS_EN_TRAMITE (backend, clientes.constants.js) — mientras
@@ -94,7 +108,50 @@ export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
 // formulario (BackOffice/la llamada tripartita lo está revisando en
 // simultáneo). Todo lo demás (borrador, rechazado_backoffice, y desde
 // 2026-09-29 también aprobado) es editable para el dueño.
-export const ESTADOS_EN_TRAMITE = ['pendiente_backoffice', 'pendiente_llamada_tripartita']
+export const ESTADOS_EN_TRAMITE = [
+  'pendiente_backoffice',
+  'pendiente_llamada_tripartita',
+  'pendiente_backoffice_renovacion',
+  'pendiente_autorizacion_renovacion',
+]
+
+/* ───────────────────────── Renovaciones ───────────────────────── */
+
+// Espejo de clientes.constants.js. Cada 1 de noviembre toda póliza vigente
+// vuelve al agente para renovarla, CON EL MISMO ID — una renovación no es
+// un registro nuevo, es la venta de siempre en otro estado.
+export const ESTADOS_RENOVACION = [
+  'pendiente_renovacion',
+  'pendiente_backoffice_renovacion',
+  'pendiente_autorizacion_renovacion',
+  'rechazado_backoffice_renovacion',
+  'renovado',
+]
+
+// Donde el agente tiene la pelota (espejo de borrador/rechazado en ventas).
+export const ESTADOS_RENOVACION_AGENTE = ['pendiente_renovacion', 'rechazado_backoffice_renovacion']
+
+// Donde la tiene BackOffice.
+export const ESTADOS_RENOVACION_BACKOFFICE = [
+  'pendiente_backoffice_renovacion',
+  'pendiente_autorizacion_renovacion',
+]
+
+export const esRenovacion = (estado?: string | null) => !!estado && ESTADOS_RENOVACION.includes(estado)
+
+// Marca del historial cuando la temporada mueve una póliza sola.
+export const APERTURA_RENOVACION_PREFIJO = '[Renovación]'
+
+// Etiquetas legibles de `historial_cambios_cliente` — la tabla guarda el
+// nombre crudo de la columna, el nombre bonito se arma acá.
+export const SECCION_CAMBIO_LABEL: Record<string, string> = {
+  titular: 'Titular',
+  conyuge: 'Cónyuge',
+  dependiente: 'Dependiente',
+  ingresos: 'Ingresos',
+  plan_salud: 'Plan de salud',
+  pago: 'Pago',
+}
 
 // Estado del envío de la Carta CMS Vital (FirmaCloud) — ver hooks/firmas.ts.
 export const ESTADO_FIRMA_LABEL: Record<string, string> = {

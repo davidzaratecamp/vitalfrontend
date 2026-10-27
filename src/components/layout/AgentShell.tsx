@@ -1,4 +1,4 @@
-import { FilePlus2, Users, Undo2, UserSearch, ListTodo, CheckCircle2 } from 'lucide-react'
+import { FilePlus2, Users, Undo2, UserSearch, ListTodo, CheckCircle2, RefreshCw, CheckCheck } from 'lucide-react'
 import { Shell } from './Shell'
 import type { NavItem } from './Sidebar'
 
@@ -14,6 +14,12 @@ const items: NavItem[] = [
   { to: '/postventa', label: 'Validar cliente', icon: UserSearch, end: true, group: 'Postventa' },
   { to: '/postventa/por-gestionar', label: 'Por gestionar', icon: ListTodo, group: 'Postventa' },
   { to: '/postventa/gestionados', label: 'Gestionados', icon: CheckCircle2, group: 'Postventa' },
+  // Renovaciones (2026-10-27) — tercer grupo, mismo patrón que Postventa.
+  // Cada 1 de noviembre las ventas aprobadas del agente caen solas en "Por
+  // renovar"; el flujo de rechazo/corrección es idéntico al de ventas.
+  { to: '/renovaciones', label: 'Por renovar', icon: RefreshCw, end: true, group: 'Renovaciones' },
+  { to: '/renovaciones/rechazadas', label: 'Rechazadas por BackOffice', icon: Undo2, group: 'Renovaciones' },
+  { to: '/renovaciones/enviadas', label: 'Enviadas y renovadas', icon: CheckCheck, group: 'Renovaciones' },
 ]
 
 export function AgentShell() {

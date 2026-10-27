@@ -42,6 +42,19 @@ const AdminPostventaPage = lazy(() => import('@/pages/admin/PostventaPage'))
 const PapeleraPage = lazy(() => import('@/pages/admin/PapeleraPage'))
 const SupervisorPostventaPage = lazy(() => import('@/pages/supervisor/PostventaPage'))
 
+// Renovaciones (2026-10-27) — una renovación es la MISMA venta con el
+// mismo ID en otro estado, así que acá solo hay listados: el formulario
+// del agente es NuevoRegistroPage y la gestión de BackOffice es
+// GestionClientePage, los dos de siempre, que ya entienden los estados de
+// renovación.
+const AgenteRenovacionesPage = lazy(() => import('@/pages/renovaciones/AgenteRenovacionesPage'))
+const AgenteRenovRechazadasPage = lazy(() => import('@/pages/renovaciones/AgenteRechazadasPage'))
+const AgenteRenovEnviadasPage = lazy(() => import('@/pages/renovaciones/AgenteEnviadasPage'))
+const BackofficeRenovColaPage = lazy(() => import('@/pages/renovaciones/BackofficeColaPage'))
+const BackofficeRenovAutorizacionPage = lazy(() => import('@/pages/renovaciones/BackofficeAutorizacionPage'))
+const BackofficeRenovCerradasPage = lazy(() => import('@/pages/renovaciones/BackofficeCerradasPage'))
+const PanelRenovacionesPage = lazy(() => import('@/pages/renovaciones/PanelRenovacionesPage'))
+
 function PageFallback() {
   return (
     <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -76,6 +89,13 @@ export default function App() {
               <Route path="/postventa/por-gestionar" element={<CasosPorGestionarPage />} />
               <Route path="/postventa/gestionados" element={<CasosGestionadosPage />} />
               <Route path="/postventa/casos/:id" element={<GestionCasoPage />} />
+              <Route path="/renovaciones" element={<AgenteRenovacionesPage />} />
+              <Route path="/renovaciones/rechazadas" element={<AgenteRenovRechazadasPage />} />
+              <Route path="/renovaciones/enviadas" element={<AgenteRenovEnviadasPage />} />
+              {/* El formulario de la renovación es el MISMO de la venta —
+                  mismos 7 pasos, ya llenos — solo que sabe que está
+                  renovando (ver esRenov en NuevoRegistroPage). */}
+              <Route path="/renovaciones/:id" element={<NuevoRegistroPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
@@ -89,6 +109,9 @@ export default function App() {
               <Route path="/postventa" element={<PostventaPage />} />
               <Route path="/postventa/gestionados" element={<PostventaGestionadosPage />} />
               <Route path="/casos/:id" element={<GestionCasoPage />} />
+              <Route path="/renovaciones" element={<BackofficeRenovColaPage />} />
+              <Route path="/renovaciones/autorizacion" element={<BackofficeRenovAutorizacionPage />} />
+              <Route path="/renovaciones/cerradas" element={<BackofficeRenovCerradasPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
@@ -111,6 +134,7 @@ export default function App() {
                   + el import lazy de abajo + el link en AdminShell.tsx. */}
               <Route path="/postventa" element={<AdminPostventaPage />} />
               <Route path="/casos/:id" element={<GestionCasoPage />} />
+              <Route path="/renovaciones" element={<PanelRenovacionesPage />} />
               <Route path="/papelera" element={<PapeleraPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -121,6 +145,7 @@ export default function App() {
               <Route path="/reporte" element={<ReportePage />} />
               <Route path="/clientes/:id" element={<ClienteDetallePage />} />
               <Route path="/postventa" element={<SupervisorPostventaPage />} />
+              <Route path="/renovaciones" element={<PanelRenovacionesPage />} />
               <Route path="/casos/:id" element={<GestionCasoPage />} />
               <Route path="/ajustes" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
