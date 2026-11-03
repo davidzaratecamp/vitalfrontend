@@ -13,7 +13,7 @@ import { useCrearCliente, useActualizarTitular, useVerificarDuplicado } from '@/
 import { apiErrorMessage } from '@/lib/api'
 import { enMayusculas } from '@/lib/mayusculas'
 import { SEXO, ESTATUS_MIGRATORIO, ORIGEN_VENTA, ORIGEN_VENTA_LABEL, ESTADO_CLIENTE_LABEL } from '@/lib/clienteConstants'
-import type { Cliente } from '@/lib/types'
+import type { ClienteDetalle } from '@/lib/types'
 
 const empty = {
   solicita_cobertura: false,
@@ -60,7 +60,7 @@ export function TitularStep({
   onCreated,
   onEstadoChange,
 }: {
-  cliente?: Cliente
+  cliente?: ClienteDetalle
   editable: boolean
   /** Teléfono que el agente ya validó en la compuerta de "Nuevo registro" — se usa tal cual, no hay que volver a escribirlo. */
   prellenar?: { phone_1: string; nombres?: string; apellidos?: string; social?: string; correo_electronico?: string }
@@ -107,7 +107,10 @@ export function TitularStep({
       contacto_emergencia_telefono: cliente.contacto_emergencia_telefono ?? '',
       origen_venta: cliente.origen_venta,
       pregunta_seguridad: cliente.pregunta_seguridad ?? '',
-      respuesta_seguridad: '',
+      // Visible para el agente también (2026-11-03, reporte: en renovaciones
+      // no la podían ver para validar al cliente). Las respuestas viejas que
+      // solo tienen hash llegan en null y el campo queda vacío.
+      respuesta_seguridad: cliente.respuesta_seguridad ?? '',
     })
   }, [cliente])
 
@@ -298,9 +301,11 @@ export function TitularStep({
           <FormField label="Pregunta" required>
             <Textarea rows={1} value={form.pregunta_seguridad} onChange={(e) => set('pregunta_seguridad', e.target.value)} required disabled={!editable} />
           </FormField>
-          <FormField label={cliente ? 'Respuesta (dejar vacío para no cambiarla)' : 'Respuesta'} required={!cliente}>
+          <FormField
+            label={cliente && !cliente.respuesta_seguridad ? 'Respuesta (dejar vacío para no cambiarla)' : 'Respuesta'}
+            required={!cliente}
+          >
             <Input
-              type="password"
               value={form.respuesta_seguridad}
               onChange={(e) => set('respuesta_seguridad', e.target.value)}
               required={!cliente}
