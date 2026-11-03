@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useColaBackoffice } from '@/hooks/backoffice'
 import { useUsuarios } from '@/hooks/usuarios'
 import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
+import { ESTADO_CLIENTE_COLOR, ESTADO_CLIENTE_LABEL } from '@/lib/clienteConstants'
 
 function diasDesde(iso: string) {
   const ms = Date.now() - new Date(iso.replace(' ', 'T')).getTime()
@@ -45,6 +46,7 @@ export function ClientesEstadoTable({
   dateLabel,
   dateField,
   mostrarAntiguedad,
+  mostrarEstado,
 }: {
   estado: string
   title: string
@@ -53,9 +55,11 @@ export function ClientesEstadoTable({
   emptyTitle: string
   emptyDescription: string
   dateLabel: string
-  dateField: 'submitted_at' | 'updated_at'
+  dateField: 'submitted_at' | 'updated_at' | 'aprobado_at'
   /** Muestra cuántos días lleva esperando, resaltado si se está demorando (solo tiene sentido en la cola). */
   mostrarAntiguedad?: boolean
+  /** Columna con el estado de hoy — en Completados, para ver cuáles ya pasaron a renovación. */
+  mostrarEstado?: boolean
 }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
@@ -135,6 +139,7 @@ export function ClientesEstadoTable({
                   <th className="px-4 py-2.5 font-medium">Contacto</th>
                   <th className="px-4 py-2.5 font-medium">Agente</th>
                   <th className="px-4 py-2.5 font-medium">{dateLabel}</th>
+                  {mostrarEstado && <th className="px-4 py-2.5 font-medium">Estado actual</th>}
                   {mostrarAntiguedad && <th className="px-4 py-2.5 font-medium">Antigüedad</th>}
                 </tr>
               </thead>
@@ -146,6 +151,13 @@ export function ClientesEstadoTable({
                     <td className="px-4 py-2.5 text-muted-foreground">{c.correo_electronico} · {c.phone_1}</td>
                     <td className="px-4 py-2.5">{c.agente_nombre}</td>
                     <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{fmtDateTime(c[dateField])}</td>
+                    {mostrarEstado && (
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${ESTADO_CLIENTE_COLOR[c.estado] ?? 'bg-muted text-muted-foreground'}`}>
+                          {ESTADO_CLIENTE_LABEL[c.estado] ?? c.estado}
+                        </span>
+                      </td>
+                    )}
                     {mostrarAntiguedad && (
                       <td className="px-4 py-2.5">{c.submitted_at && <Antiguedad iso={c.submitted_at} />}</td>
                     )}

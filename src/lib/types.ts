@@ -328,6 +328,8 @@ export interface ClienteListItem {
   created_at: string
   submitted_at: string | null
   updated_at?: string
+  /** Solo en Completados: cuándo BackOffice la aprobó (sale del historial de estados). */
+  aprobado_at?: string
   agente_nombre: string
 }
 
