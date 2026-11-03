@@ -84,6 +84,7 @@ export const ESTADO_CLIENTE_LABEL: Record<string, string> = {
   pendiente_autorizacion_renovacion: 'Pendiente autorización renovación',
   rechazado_backoffice_renovacion: 'Rechazo BackOffice renovación',
   renovado: 'Renovado',
+  no_renovado: 'No renovado',
 }
 
 export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
@@ -101,6 +102,9 @@ export const ESTADO_CLIENTE_COLOR: Record<string, string> = {
   pendiente_autorizacion_renovacion: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
   rechazado_backoffice_renovacion: 'bg-red-500/10 text-red-600 dark:text-red-400',
   renovado: 'bg-violet-600/15 text-violet-700 dark:text-violet-300',
+  // Gris y no rojo: no es un error que alguien tenga que corregir, es un
+  // cierre — la póliza simplemente no siguió.
+  no_renovado: 'bg-zinc-500/15 text-zinc-700 dark:text-zinc-300',
 }
 
 // Espejo de ESTADOS_EN_TRAMITE (backend, clientes.constants.js) — mientras
@@ -126,6 +130,24 @@ export const ESTADOS_RENOVACION = [
   'pendiente_autorizacion_renovacion',
   'rechazado_backoffice_renovacion',
   'renovado',
+  'no_renovado',
+]
+
+// Espejo de ESTADOS_SOLO_LECTURA (backend): el agente no logró renovar
+// (2026-11-03). Nadie edita nada; si fue un error, admin la reabre.
+export const ESTADOS_SOLO_LECTURA = ['no_renovado']
+
+// Filtro "Resultado" del panel de admin/supervisor (2026-11-03, pedido del
+// usuario: ver cuáles se renovaron y cuáles no).
+export const RESULTADO_RENOVACION: { value: string; label: string; estados: string[] }[] = [
+  { value: 'todas', label: 'Todas', estados: ESTADOS_RENOVACION },
+  {
+    value: 'en_proceso',
+    label: 'En proceso',
+    estados: ['pendiente_renovacion', 'pendiente_backoffice_renovacion', 'pendiente_autorizacion_renovacion', 'rechazado_backoffice_renovacion'],
+  },
+  { value: 'renovadas', label: 'Renovadas', estados: ['renovado'] },
+  { value: 'no_renovadas', label: 'No renovadas', estados: ['no_renovado'] },
 ]
 
 // Donde el agente tiene la pelota (espejo de borrador/rechazado en ventas).

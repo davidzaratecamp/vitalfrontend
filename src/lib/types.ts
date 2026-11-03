@@ -72,6 +72,7 @@ export type EstadoCliente =
   | 'pendiente_autorizacion_renovacion'
   | 'rechazado_backoffice_renovacion'
   | 'renovado'
+  | 'no_renovado'
 
 export interface Aseguradora {
   id: number
@@ -140,6 +141,8 @@ export interface RenovacionListItem {
   updated_at: string
   agente_nombre: string | null
   empresa_nombre: string | null
+  /** Observación con la que el agente la cerró como no renovada. */
+  motivo_no_renovado: string | null
 }
 
 export interface ResumenTemporada {
@@ -394,7 +397,7 @@ export interface ClienteEliminado {
   social: string | null
   correo_electronico: string | null
   phone_1: string | null
-  estado_previo: 'borrador' | 'pendiente_backoffice' | 'pendiente_llamada_tripartita' | 'aprobado' | 'rechazado_backoffice'
+  estado_previo: EstadoCliente
   agente_id: number
   agente_nombre: string
   empresa_id: number | null
@@ -406,6 +409,31 @@ export interface ClienteEliminado {
   ip_origen: string | null
   observacion: string | null
   created_at: string
+  /** Desde 2026-11-03 la papelera guarda una copia completa: con copia se
+   * restaura con el mismo ID; sin copia (eliminados antes) el agente lo
+   * vuelve a registrar. */
+  tiene_copia: boolean
+  restaurado_at: string | null
+  restaurado_por_nombre: string | null
+  restaurado_agente_id: number | null
+  restaurado_agente_nombre: string | null
+  /** null mientras el agente no haya rehecho uno sin copia. */
+  restaurado_cliente_id: number | null
+  restaurado_observacion: string | null
+}
+
+/** Registro sin copia que admin le asignó al agente para volver a registrar. */
+export interface PapeleraAsignado {
+  id: number
+  cliente_id_original: number
+  nombres: string
+  apellidos: string
+  social: string | null
+  correo_electronico: string | null
+  phone_1: string | null
+  restaurado_por_nombre: string | null
+  restaurado_observacion: string | null
+  restaurado_at: string
 }
 
 export interface PapeleraPage {
@@ -420,7 +448,7 @@ export interface Notificacion {
   id: number
   usuario_id: number
   cliente_id: number | null
-  tipo: 'rechazo' | 'nuevo_pendiente'
+  tipo: 'rechazo' | 'nuevo_pendiente' | 'renovacion_abierta' | 'papelera_restaurado' | 'papelera_rehacer'
   mensaje: string
   leida: boolean
   created_at: string

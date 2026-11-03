@@ -9,9 +9,10 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useRenovaciones } from '@/hooks/renovaciones'
 import { useAuthStore } from '@/stores/auth'
-import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
+import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, RESULTADO_RENOVACION } from '@/lib/clienteConstants'
 import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
 
 /**
@@ -33,6 +34,7 @@ export function RenovacionesTable({
   emptyDescription,
   rutaDetalle,
   mostrarEstado = true,
+  filtroResultado = false,
 }: {
   estados: string[]
   title: string
@@ -45,19 +47,26 @@ export function RenovacionesTable({
   rutaDetalle: (id: number) => string
   /** La columna Estado sobra cuando la pantalla ya filtra por uno solo. */
   mostrarEstado?: boolean
+  /** Selector "Resultado" (renovadas / no renovadas / en proceso) — panel
+   * de admin y supervisor (2026-11-03). Cuando está, manda sobre `estados`. */
+  filtroResultado?: boolean
 }) {
   const navigate = useNavigate()
   const role = useAuthStore((st) => st.user?.role)
   const [q, setQ] = useState('')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
+  const [resultado, setResultado] = useState('todas')
+  const estadosEfectivos = filtroResultado
+    ? (RESULTADO_RENOVACION.find((r) => r.value === resultado)?.estados ?? estados)
+    : estados
   const { data, isLoading } = useRenovaciones({
-    estados,
+    estados: estadosEfectivos,
     q: q || undefined,
     desde: desde || undefined,
     hasta: hasta || undefined,
   })
-  const hayFiltros = !!q || !!desde || !!hasta
+  const hayFiltros = !!q || !!desde || !!hasta || resultado !== 'todas'
   // El agente solo ve lo suyo, así que la columna "Agente" no le dice nada.
   const mostrarAgente = role !== 'agente'
 
@@ -75,6 +84,19 @@ export function RenovacionesTable({
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
+        {filtroResultado && (
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Resultado</label>
+            <Select value={resultado} onValueChange={setResultado}>
+              <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {RESULTADO_RENOVACION.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground">Desde</label>
           <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => onChangeFechaFiltro(e.target.value, setDesde)} />
@@ -92,6 +114,7 @@ export function RenovacionesTable({
               setQ('')
               setDesde('')
               setHasta('')
+              setResultado('todas')
             }}
           >
             Limpiar filtros
@@ -138,6 +161,11 @@ export function RenovacionesTable({
                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${ESTADO_CLIENTE_COLOR[c.estado] ?? ''}`}>
                           {ESTADO_CLIENTE_LABEL[c.estado] ?? c.estado}
                         </span>
+                        {c.estado === 'no_renovado' && c.motivo_no_renovado && (
+                          <p className="mt-1 max-w-64 text-xs text-muted-foreground line-clamp-2" title={c.motivo_no_renovado}>
+                            {c.motivo_no_renovado}
+                          </p>
+                        )}
                       </td>
                     )}
                     <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{c.renovacion_anio ?? '—'}</td>

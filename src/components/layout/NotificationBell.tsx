@@ -33,6 +33,12 @@ export function NotificationBell() {
 
   function irAlCliente(n: Notificacion) {
     if (!n.leida) marcarLeida.mutate(n.id)
+    // Registro de la papelera para volver a registrar: todavía no tiene ID,
+    // lo espera en "Nuevo registro" (2026-11-03).
+    if (n.tipo === 'papelera_rehacer') {
+      navigate('/nuevo')
+      return
+    }
     if (n.cliente_id == null) return
     const path = role === 'agente' ? `/clientes/${n.cliente_id}/editar` : `/clientes/${n.cliente_id}`
     navigate(path)

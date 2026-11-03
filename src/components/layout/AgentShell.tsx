@@ -19,7 +19,7 @@ const items: NavItem[] = [
   // renovar"; el flujo de rechazo/corrección es idéntico al de ventas.
   { to: '/renovaciones', label: 'Por renovar', icon: RefreshCw, end: true, group: 'Renovaciones' },
   { to: '/renovaciones/rechazadas', label: 'Rechazadas por BackOffice', icon: Undo2, group: 'Renovaciones' },
-  { to: '/renovaciones/enviadas', label: 'Enviadas y renovadas', icon: CheckCheck, group: 'Renovaciones' },
+  { to: '/renovaciones/enviadas', label: 'Enviadas y cerradas', icon: CheckCheck, group: 'Renovaciones' },
 ]
 
 export function AgentShell() {

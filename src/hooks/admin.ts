@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import type { DashboardData, ReportePage, PapeleraPage } from '@/lib/types'
+import type { DashboardData, ReportePage, PapeleraPage, PapeleraAsignado } from '@/lib/types'
 
 export interface AdminFilters {
   estado?: string
@@ -42,6 +42,36 @@ export const usePapelera = (filters: PapeleraFilters = {}) =>
   useQuery({
     queryKey: ['admin', 'papelera', filters],
     queryFn: async () => (await api.get<PapeleraPage>('/admin/papelera', { params: filters })).data,
+  })
+
+/**
+ * Devolver a venta desde la papelera (2026-11-03), eligiendo el agente. Con
+ * copia completa vuelve con el mismo ID; sin copia queda asignado para que
+ * el agente lo registre de nuevo (ver papelera.js en el backend).
+ */
+export function useRestaurarPapelera() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, agente_id, observacion }: { id: number; agente_id: number; observacion?: string }) =>
+      (
+        await api.post<{ modo: 'restaurado' | 'rehacer'; cliente_id: number | null }>(`/admin/papelera/${id}/restaurar`, {
+          agente_id,
+          observacion,
+        })
+      ).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'papelera'] })
+      qc.invalidateQueries({ queryKey: ['clientes'] })
+    },
+  })
+}
+
+/** Agente: los registros sin copia que admin le asignó para volver a registrar. */
+export const usePapeleraAsignados = (enabled = true) =>
+  useQuery({
+    queryKey: ['clientes', 'papelera-asignados'],
+    enabled,
+    queryFn: async () => (await api.get<PapeleraAsignado[]>('/clientes/papelera-asignados')).data,
   })
 
 // Excel completo (2026-09-30, pedido del usuario: "el export me traiga toda

@@ -105,11 +105,12 @@ export default function PanelRenovacionesPage() {
       <RenovacionesTable
         estados={ESTADOS_RENOVACION}
         title="Renovaciones"
-        description="Todas las pólizas en temporada de renovación, en cualquier estado y de todos los agentes."
+        description="Todas las pólizas en temporada de renovación, de todos los agentes. Usa «Resultado» para ver cuáles se renovaron y cuáles no."
         emptyIcon={RefreshCw}
         emptyTitle="No hay renovaciones todavía"
         emptyDescription="Cada 1 de noviembre las pólizas vigentes pasan solas a renovación."
         rutaDetalle={(id) => `/clientes/${id}`}
+        filtroResultado
       />
     </div>
   )

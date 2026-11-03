@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { History, Trash2, UserCog } from 'lucide-react'
+import { History, Trash2, UserCog, RotateCcw } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { ClienteResumen } from '@/components/common/ClienteResumen'
 import { CopyableId } from '@/components/common/CopyableId'
@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { SearchSelect } from '@/components/common/SearchSelect'
 import { useCliente, useEliminarCliente, useReasignarAgente } from '@/hooks/clientes'
 import { useUsuarios } from '@/hooks/usuarios'
+import { useReabrirRenovacion } from '@/hooks/renovaciones'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR } from '@/lib/clienteConstants'
@@ -36,6 +37,9 @@ export default function ClienteDetallePage() {
   const [reasignarOpen, setReasignarOpen] = useState(false)
   const [nuevoAgenteId, setNuevoAgenteId] = useState('all')
   const [motivoReasignar, setMotivoReasignar] = useState('')
+  const reabrir = useReabrirRenovacion(id ?? '')
+  const [reabrirOpen, setReabrirOpen] = useState(false)
+  const [motivoReabrir, setMotivoReabrir] = useState('')
 
   if (isLoading || !cliente) return <Skeleton className="h-96 rounded-xl" />
 
@@ -64,6 +68,18 @@ export default function ClienteDetallePage() {
     }
   }
 
+  /** Deshace un "No se pudo renovar" marcado por error (2026-11-03). */
+  async function onReabrir() {
+    try {
+      await reabrir.mutateAsync(motivoReabrir.trim() || undefined)
+      toast.success('Renovación reabierta — volvió a "Pendiente renovación"')
+      setReabrirOpen(false)
+      setMotivoReabrir('')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo reabrir'))
+    }
+  }
+
   async function onEliminar() {
     if (!id) return
     try {
@@ -87,6 +103,11 @@ export default function ClienteDetallePage() {
         description="Vista 360 — solo lectura."
         actions={
           <>
+            {esAdmin && cliente.estado === 'no_renovado' && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setReabrirOpen(true)}>
+                <RotateCcw className="size-4" /> Reabrir renovación
+              </Button>
+            )}
             {esAdmin && (
               <Button type="button" variant="ghost" size="sm" onClick={() => setReasignarOpen(true)}>
                 <UserCog className="size-4" /> Reasignar a otro agente
@@ -142,8 +163,8 @@ export default function ClienteDetallePage() {
               <DialogTitle>¿Eliminar este ID?</DialogTitle>
               <DialogDescription>
                 Se va a borrar por completo — {ESTADO_CLIENTE_LABEL[cliente.estado]}, con todo lo que se haya guardado
-                (dependientes, evidencias, etc). No se puede deshacer. Queda registrado en la Papelera con tu usuario,
-                fecha/hora e IP.
+                (dependientes, evidencias, etc). Queda en la Papelera con tu usuario, fecha/hora e IP, y desde ahí se
+                puede devolver a venta con el mismo ID.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-1.5">
@@ -172,12 +193,45 @@ export default function ClienteDetallePage() {
           open={confirmBorrar}
           onOpenChange={setConfirmBorrar}
           title="¿Eliminar este borrador?"
-          description="Se va a borrar por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer."
+          description="Se va a borrar, con todo lo que se haya guardado (dependientes, evidencias, etc). Solo un admin lo puede recuperar desde la Papelera."
           confirmLabel="Eliminar"
           destructive
           loading={eliminar.isPending}
           onConfirm={onEliminar}
         />
+      )}
+
+      {esAdmin && (
+        <Dialog open={reabrirOpen} onOpenChange={setReabrirOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>¿Reabrir esta renovación?</DialogTitle>
+              <DialogDescription>
+                Vuelve a <strong>Pendiente renovación</strong> y le llega el aviso a {cliente.agente.name}. Úsalo cuando se
+                marcó como no renovada por error.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-1.5">
+              <Label htmlFor="motivo-reabrir">Motivo (opcional)</Label>
+              <Textarea
+                id="motivo-reabrir"
+                placeholder="Por qué se reabre, si aplica..."
+                value={motivoReabrir}
+                onChange={(e) => setMotivoReabrir(e.target.value)}
+                maxLength={500}
+                rows={3}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReabrirOpen(false)} disabled={reabrir.isPending}>
+                Cancelar
+              </Button>
+              <Button onClick={onReabrir} disabled={reabrir.isPending}>
+                Reabrir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {esAdmin && (

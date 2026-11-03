@@ -63,6 +63,31 @@ export function useFinalizarRenovacion(id: string | number) {
   })
 }
 
+/** "No se pudo renovar" (2026-11-03) — solo el agente dueño, con observación obligatoria. */
+export function useMarcarNoRenovado(id: string | number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (observacion: string) =>
+      (await api.post<Cliente>(`/renovaciones/${id}/no-renovado`, { observacion })).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['renovaciones'] })
+      qc.invalidateQueries({ queryKey: ['cliente', String(id)] })
+    },
+  })
+}
+
+/** Solo admin: devuelve a "Pendiente renovación" una marcada como no renovada por error. */
+export function useReabrirRenovacion(id: string | number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (motivo?: string) => (await api.post<Cliente>(`/renovaciones/${id}/reabrir`, { motivo })).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['renovaciones'] })
+      qc.invalidateQueries({ queryKey: ['cliente', String(id)] })
+    },
+  })
+}
+
 /**
  * Historial de CAMBIOS de datos (qué campo se tocó, de qué valor a cuál).
  * Sin `contexto` trae todo el historial del registro; con

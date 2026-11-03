@@ -56,13 +56,17 @@ export function TitularStep({
   cliente,
   editable,
   prellenar,
+  papeleraId,
   onCreated,
   onEstadoChange,
 }: {
   cliente?: Cliente
   editable: boolean
   /** Teléfono que el agente ya validó en la compuerta de "Nuevo registro" — se usa tal cual, no hay que volver a escribirlo. */
-  prellenar?: { phone_1: string }
+  prellenar?: { phone_1: string; nombres?: string; apellidos?: string; social?: string; correo_electronico?: string }
+  /** Registro de la papelera que el agente está volviendo a registrar
+   * (2026-11-03) — al crear, el backend lo deja enlazado. */
+  papeleraId?: number
   onCreated?: (id: number) => void
   /** El Paso 5 necesita el estado apenas se elige acá, antes incluso de
    * guardar este paso — así puede mostrar qué aseguradoras ofrecer "desde
@@ -149,6 +153,7 @@ export function TitularStep({
         await actualizar.mutateAsync(body)
         toast.success('Datos del titular guardados')
       } else {
+        if (papeleraId) body.papelera_id = papeleraId
         const created = await crear.mutateAsync(body)
         toast.success('Cliente creado — continúa con los siguientes pasos')
         onCreated?.(created.id)

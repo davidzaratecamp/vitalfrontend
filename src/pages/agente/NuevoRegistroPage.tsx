@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, Trash2, RefreshCw } from 'lucide-react'
+import { CheckCircle2, User, Users, Baby, DollarSign, HeartHandshake, CreditCard, FileText, Trash2, RefreshCw, Ban, ArchiveRestore } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { FirmaCartaCard } from '@/components/common/FirmaCartaCard'
 import { ObservacionesCard } from '@/components/common/ObservacionesCard'
@@ -11,6 +11,9 @@ import { CopyableId } from '@/components/common/CopyableId'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { StepStatus } from '@/components/agente/FormField'
 import { ValidacionContacto } from '@/components/agente/ValidacionContacto'
 import { TitularStep } from '@/components/agente/steps/TitularStep'
@@ -22,7 +25,9 @@ import { PagoStep } from '@/components/agente/steps/PagoStep'
 import { EvidenciasStep } from '@/components/agente/steps/EvidenciasStep'
 import { useCliente, useConyuge, useDependientes, useIngresos, usePlanSalud, usePago, useEvidencias, useFinalizar, useEliminarCliente } from '@/hooks/clientes'
 import { useFirmas } from '@/hooks/firmas'
-import { useFinalizarRenovacion } from '@/hooks/renovaciones'
+import { useFinalizarRenovacion, useMarcarNoRenovado } from '@/hooks/renovaciones'
+import { usePapeleraAsignados } from '@/hooks/admin'
+import { fmtDateTime } from '@/lib/dateFormat'
 import { HistorialCambiosCard } from '@/components/renovaciones/HistorialCambiosCard'
 import { useAseguradorasPorEstado } from '@/hooks/catalogos'
 import { apiErrorMessage } from '@/lib/api'
@@ -33,6 +38,7 @@ import {
   ESTADOS_EN_TRAMITE,
   ESTADOS_RENOVACION,
   ESTADOS_RENOVACION_AGENTE,
+  ESTADOS_SOLO_LECTURA,
 } from '@/lib/clienteConstants'
 
 export default function NuevoRegistroPage() {
@@ -43,7 +49,14 @@ export default function NuevoRegistroPage() {
   // La compuerta solo aplica al crear (sin :id en la URL) — corregir un
   // registro existente (con :id) nunca pasa por acá.
   const [gatePassed, setGatePassed] = useState(() => !!id)
-  const [datosIniciales, setDatosIniciales] = useState<{ phone_1: string } | undefined>()
+  const [datosIniciales, setDatosIniciales] = useState<
+    { phone_1: string; nombres?: string; apellidos?: string; social?: string; correo_electronico?: string } | undefined
+  >()
+  // Registro de la papelera que se está volviendo a registrar (2026-11-03):
+  // admin lo devolvió a venta pero se eliminó antes de que la papelera
+  // guardara copias completas, así que solo trae nombre y contacto.
+  const [papeleraId, setPapeleraId] = useState<number | undefined>()
+  const asignados = usePapeleraAsignados(!id)
   // Se llena apenas el agente elige un estado en el Paso 1 — antes incluso
   // de guardarlo — así el Paso 5 puede mostrar cobertura "desde el minuto
   // 1". Si se reabre un cliente ya guardado, arranca con su estado real.
@@ -67,6 +80,9 @@ export default function NuevoRegistroPage() {
   const finalizarRenov = useFinalizarRenovacion(id ?? 0)
   const eliminar = useEliminarCliente()
   const [confirmBorrar, setConfirmBorrar] = useState(false)
+  const noRenovar = useMarcarNoRenovado(id ?? 0)
+  const [noRenovOpen, setNoRenovOpen] = useState(false)
+  const [obsNoRenov, setObsNoRenov] = useState('')
   // Todos los hooks van antes de los `return` de abajo — si no, React se
   // queja (con razón: el orden de hooks no puede depender de una condición).
   const estadoActivo = cliente?.estado_us || estadoElegido
@@ -78,6 +94,49 @@ export default function NuevoRegistroPage() {
     return (
       <div className="space-y-6">
         <PageHeader title="Nuevo registro" description="Primero valida que el cliente no esté ya registrado." />
+        {!!asignados.data?.length && (
+          <Card className="space-y-3 border-sky-500/40 bg-sky-500/5 p-4 text-sm">
+            <p className="flex items-center gap-2 font-medium">
+              <ArchiveRestore className="size-4" /> Registros que un admin te devolvió desde la papelera
+            </p>
+            <p className="text-muted-foreground">
+              Se eliminaron antes de que el sistema guardara copias completas, así que solo quedó el nombre y el
+              contacto. Empieza el registro con esos datos ya puestos y completa lo demás.
+            </p>
+            <div className="divide-y rounded-md border bg-background">
+              {asignados.data.map((a) => (
+                <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {a.nombres} {a.apellidos}{' '}
+                      <span className="text-xs font-normal text-muted-foreground">· ID eliminado {a.cliente_id_original}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {a.restaurado_por_nombre} · {fmtDateTime(a.restaurado_at)}
+                      {a.restaurado_observacion ? ` · ${a.restaurado_observacion}` : ''}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setDatosIniciales({
+                        phone_1: a.phone_1 ?? '',
+                        nombres: a.nombres,
+                        apellidos: a.apellidos,
+                        social: a.social ?? '',
+                        correo_electronico: a.correo_electronico ?? '',
+                      })
+                      setPapeleraId(a.id)
+                      setGatePassed(true)
+                    }}
+                  >
+                    Registrar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
         <ValidacionContacto
           onNuevo={(datos) => {
             setDatosIniciales(datos)
@@ -92,7 +151,8 @@ export default function NuevoRegistroPage() {
   // 2026-09-29 incluye 'aprobado' (antes quedaba bloqueado incluso para el
   // dueño, bug reportado por el usuario y ya corregido también en el
   // backend, ver ESTADOS_EN_TRAMITE).
-  const editable = !cliente || !ESTADOS_EN_TRAMITE.includes(cliente.estado)
+  // 'no_renovado' (2026-11-03) también queda en solo lectura.
+  const editable = !cliente || (!ESTADOS_EN_TRAMITE.includes(cliente.estado) && !ESTADOS_SOLO_LECTURA.includes(cliente.estado))
   // "Finalizar y enviar a BackOffice" es más angosto que `editable` — solo
   // tiene sentido para un registro que todavía no se envió (borrador) o que
   // volvió rechazado (rechazado_backoffice). Un 'aprobado' ahora es
@@ -104,6 +164,7 @@ export default function NuevoRegistroPage() {
   // estado, así que se reusa el formulario completo en vez de duplicarlo.
   // Lo único distinto es a dónde se envía al terminar y qué se exige.
   const esRenov = !!cliente && ESTADOS_RENOVACION.includes(cliente.estado)
+  const noRenovado = cliente?.estado === 'no_renovado'
   const puedeEnviarRenovacion = !!cliente && ESTADOS_RENOVACION_AGENTE.includes(cliente.estado)
   const clienteId = cliente?.id
   // El motivo vive en el historial de estados, no en el cliente directo —
@@ -113,6 +174,7 @@ export default function NuevoRegistroPage() {
   // soporte del rechazo desde acá, solo desde la lista aparte "Rechazados").
   const motivoRechazo = cliente?.historial.find((h) => h.estado_nuevo === 'rechazado_backoffice')?.motivo
   const motivoRechazoRenov = cliente?.historial.find((h) => h.estado_nuevo === 'rechazado_backoffice_renovacion')?.motivo
+  const motivoNoRenovado = cliente?.historial.find((h) => h.estado_nuevo === 'no_renovado')?.motivo
 
   const ingresoTitularOk = ingresos.data?.rows.some((r) => r.dependiente_id == null)
   // "Subir venta" (Finalizar) exige que el cliente ya haya firmado la carta
@@ -159,6 +221,18 @@ export default function NuevoRegistroPage() {
     }
   }
 
+  /** "No se pudo renovar" — cierra la renovación con la observación del agente. */
+  async function onNoRenovar() {
+    try {
+      await noRenovar.mutateAsync(obsNoRenov.trim())
+      toast.success('Renovación cerrada como no renovada')
+      setNoRenovOpen(false)
+      navigate('/renovaciones/enviadas')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo guardar'))
+    }
+  }
+
   async function onEliminar() {
     if (!clienteId) return
     try {
@@ -179,7 +253,9 @@ export default function NuevoRegistroPage() {
             ? 'BackOffice rechazó este registro — corrige lo necesario y reenvía.'
             : cliente?.estado === 'rechazado_backoffice_renovacion'
               ? 'BackOffice rechazó esta renovación — corrige lo necesario y reenvíala.'
-              : esRenov
+              : noRenovado
+                ? 'Esta póliza quedó como no renovada — solo lectura.'
+                : esRenov
                 ? `Renovación ${cliente?.renovacion_anio ?? ''} — los datos vienen de la venta original. Cambia solo lo que haga falta y suma los documentos nuevos.`
                 : 'Completa los 7 pasos. Cada paso se guarda por separado; puedes cerrar y continuar luego.'
         }
@@ -201,7 +277,21 @@ export default function NuevoRegistroPage() {
         }
       />
 
-      {esRenov && (
+      {noRenovado && (
+        <Card className="space-y-2 border-zinc-500/40 bg-zinc-500/5 p-4 text-sm">
+          <p className="flex items-center gap-2 font-medium">
+            <Ban className="size-4" /> No se pudo renovar (temporada {cliente?.renovacion_anio ?? '—'})
+          </p>
+          {motivoNoRenovado && (
+            <p className="rounded-md bg-background/60 px-2.5 py-1.5">
+              <span className="font-medium">Observación:</span> {motivoNoRenovado}
+            </p>
+          )}
+          <p className="text-muted-foreground">Si se marcó por error, pídele a un admin que la reabra.</p>
+        </Card>
+      )}
+
+      {esRenov && !noRenovado && (
         <Card className="space-y-2 border-violet-500/40 bg-violet-500/5 p-4 text-sm">
           <p className="flex items-center gap-2 font-medium">
             <RefreshCw className="size-4" /> Esta póliza está en renovación (temporada {cliente?.renovacion_anio ?? '—'})
@@ -272,6 +362,7 @@ export default function NuevoRegistroPage() {
               cliente={cliente}
               editable={editable}
               prellenar={datosIniciales}
+              papeleraId={papeleraId}
               onCreated={(newId) => navigate(`/clientes/${newId}/editar`, { replace: true })}
               onEstadoChange={setEstadoElegido}
             />
@@ -395,22 +486,68 @@ export default function NuevoRegistroPage() {
               ? 'Cuando esté todo revisado, envía la renovación a BackOffice.'
               : 'Falta la carta CMS firmada por el cliente en esta renovación — envíala arriba y usa "Actualizar estado" apenas firme.'}
           </p>
-          <Button onClick={onEnviarRenovacion} disabled={finalizarRenov.isPending}>
-            <RefreshCw className="size-4" />
-            {finalizarRenov.isPending
-              ? 'Enviando...'
-              : cliente?.estado === 'rechazado_backoffice_renovacion'
-                ? 'Reenviar renovación a BackOffice'
-                : 'Enviar renovación a BackOffice'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setObsNoRenov('')
+                setNoRenovOpen(true)
+              }}
+              disabled={finalizarRenov.isPending}
+            >
+              <Ban className="size-4" /> No se pudo renovar
+            </Button>
+            <Button onClick={onEnviarRenovacion} disabled={finalizarRenov.isPending}>
+              <RefreshCw className="size-4" />
+              {finalizarRenov.isPending
+                ? 'Enviando...'
+                : cliente?.estado === 'rechazado_backoffice_renovacion'
+                  ? 'Reenviar renovación a BackOffice'
+                  : 'Enviar renovación a BackOffice'}
+            </Button>
+          </div>
         </Card>
       )}
+
+      <Dialog open={noRenovOpen} onOpenChange={setNoRenovOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>¿No se pudo renovar esta póliza?</DialogTitle>
+            <DialogDescription>
+              La renovación se cierra como <strong>No renovado</strong> y la póliza queda en solo lectura. Si fue un
+              error, un admin la puede reabrir.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="obs-no-renovado">Observación (obligatoria)</Label>
+            <Textarea
+              id="obs-no-renovado"
+              placeholder="Por qué no se pudo renovar: el cliente no contestó, se cambió de agencia, ya no califica..."
+              value={obsNoRenov}
+              onChange={(e) => setObsNoRenov(e.target.value)}
+              maxLength={1000}
+              rows={4}
+            />
+            {obsNoRenov.trim().length > 0 && obsNoRenov.trim().length < 5 && (
+              <p className="text-xs text-destructive">Escribe al menos 5 caracteres.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoRenovOpen(false)} disabled={noRenovar.isPending}>
+              Cancelar
+            </Button>
+            <Button onClick={onNoRenovar} disabled={noRenovar.isPending || obsNoRenov.trim().length < 5}>
+              {noRenovar.isPending ? 'Guardando...' : 'Confirmar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={confirmBorrar}
         onOpenChange={setConfirmBorrar}
         title={cliente?.estado === 'borrador' ? '¿Eliminar este borrador?' : '¿Eliminar este registro rechazado?'}
-        description="Se va a borrar por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer."
+        description="Se va a borrar, con todo lo que se haya guardado (dependientes, evidencias, etc). Solo un admin lo puede recuperar desde la Papelera."
         confirmLabel="Eliminar"
         destructive
         loading={eliminar.isPending}

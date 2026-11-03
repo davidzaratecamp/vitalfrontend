@@ -145,7 +145,7 @@ export default function MisClientesPage() {
         open={!!porBorrar}
         onOpenChange={(v) => !v && setPorBorrar(null)}
         title={porBorrar?.estado === 'borrador' ? '¿Eliminar este borrador?' : '¿Eliminar este registro rechazado?'}
-        description={`Se va a borrar "${porBorrar?.nombre}" por completo, con todo lo que se haya guardado (dependientes, evidencias, etc). No se puede deshacer.`}
+        description={`Se va a borrar "${porBorrar?.nombre}", con todo lo que se haya guardado (dependientes, evidencias, etc). Solo un admin lo puede recuperar desde la Papelera.`}
         confirmLabel="Eliminar"
         destructive
         loading={eliminar.isPending}
