@@ -98,11 +98,11 @@ export function RenovacionesTable({
           </div>
         )}
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Desde</label>
+          <label className="text-xs text-muted-foreground" title="Por la fecha de la última gestión del agente">Gestión desde</label>
           <Input type="date" lang="en-US" className="h-9 w-36" value={desde} onChange={(e) => onChangeFechaFiltro(e.target.value, setDesde)} />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Hasta</label>
+          <label className="text-xs text-muted-foreground" title="Por la fecha de la última gestión del agente">Gestión hasta</label>
           <Input type="date" lang="en-US" className="h-9 w-36" value={hasta} onChange={(e) => onChangeFechaFiltro(e.target.value, setHasta)} />
         </div>
         {hayFiltros && (
@@ -142,7 +142,7 @@ export function RenovacionesTable({
                   {mostrarAgente && <th className="px-4 py-2.5 font-medium">Agente</th>}
                   {mostrarEstado && <th className="px-4 py-2.5 font-medium">Estado</th>}
                   <th className="px-4 py-2.5 font-medium">Temporada</th>
-                  <th className="px-4 py-2.5 font-medium">Última actualización</th>
+                  <th className="px-4 py-2.5 font-medium">Última gestión del agente</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,7 +169,9 @@ export function RenovacionesTable({
                       </td>
                     )}
                     <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{c.renovacion_anio ?? '—'}</td>
-                    <td className="px-4 py-2.5 tabular-nums text-muted-foreground">{fmtDateTime(c.updated_at)}</td>
+                    <td className="px-4 py-2.5 tabular-nums text-muted-foreground">
+                      {c.ultima_gestion_agente ? fmtDateTime(c.ultima_gestion_agente) : <span className="italic">Sin gestión</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -143,6 +143,8 @@ export interface RenovacionListItem {
   empresa_nombre: string | null
   /** Observación con la que el agente la cerró como no renovada. */
   motivo_no_renovado: string | null
+  /** Última vez que el agente la trabajó en esta temporada — `null` si no la ha tocado. Los filtros de fecha van por acá. */
+  ultima_gestion_agente: string | null
 }
 
 export interface ResumenTemporada {
