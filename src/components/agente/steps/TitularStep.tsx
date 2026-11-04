@@ -90,7 +90,7 @@ export function TitularStep({
       apellidos: cliente.apellidos,
       sexo: cliente.sexo,
       fecha_nacimiento: cliente.fecha_nacimiento?.slice(0, 10) ?? '',
-      social: cliente.social,
+      social: cliente.social ?? '',
       estatus_migratorio: cliente.estatus_migratorio,
       direccion: cliente.direccion,
       tipo_vivienda: cliente.tipo_vivienda ?? '',
@@ -145,6 +145,7 @@ export function TitularStep({
     try {
       const body: Record<string, unknown> = { ...form }
       if (!body.respuesta_seguridad) delete body.respuesta_seguridad
+      if (!body.social) body.social = null
       if (!body.tipo_vivienda) body.tipo_vivienda = null
       if (!body.phone_2) body.phone_2 = null
       if (!body.whatsapp) body.whatsapp = null
@@ -211,12 +212,12 @@ export function TitularStep({
           <Input type="date" lang="en-US" value={form.fecha_nacimiento} onChange={(e) => set('fecha_nacimiento', e.target.value)} required disabled={!editable} />
           {edad != null && <p className="mt-1 text-xs text-muted-foreground">Edad: {edad} años</p>}
         </FormField>
-        <FormField label="Social Security Number (SSN)" required>
+        <FormField label="Social Security Number (SSN)">
           <Input
             value={form.social}
             onChange={(e) => set('social', e.target.value.replace(/\D/g, '').slice(0, 9))}
-            placeholder="9 dígitos"
-            required
+            placeholder="9 dígitos (opcional)"
+            minLength={9}
             disabled={!editable}
           />
         </FormField>

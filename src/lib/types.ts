@@ -100,7 +100,8 @@ export interface Cliente {
   apellidos: string
   sexo: 'Masculino' | 'Femenino'
   fecha_nacimiento: string
-  social: string
+  /** Opcional desde 2026-11-04. */
+  social: string | null
   estatus_migratorio: string
   direccion: string
   tipo_vivienda: string | null
