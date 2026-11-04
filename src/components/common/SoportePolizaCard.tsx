@@ -25,14 +25,18 @@ export function SoportePolizaCard({
   editable,
   tipo = 'poliza',
   titulo = 'Soporte de póliza',
+  desde,
 }: {
   clienteId: number
   editable: boolean
   tipo?: 'poliza' | 'rechazo'
   titulo?: string
+  /** Solo lo subido desde esta fecha — en una renovación, para no mezclar
+   * el soporte de un rechazo de la venta original con el de ahora. */
+  desde?: string | null
 }) {
   const { data: todos, isLoading } = useSoportesPoliza(clienteId)
-  const soportes = todos?.filter((s) => s.tipo === tipo)
+  const soportes = todos?.filter((s) => s.tipo === tipo && (!desde || s.created_at >= desde))
   const subir = useSubirSoportePoliza(clienteId)
   const eliminar = useEliminarSoportePoliza(clienteId)
   const fileRef = useRef<HTMLInputElement>(null)

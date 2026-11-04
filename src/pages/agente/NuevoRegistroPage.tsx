@@ -316,6 +316,19 @@ export default function NuevoRegistroPage() {
         </Card>
       )}
 
+      {/* La imagen que BackOffice adjunta al rechazar la renovación
+          (2026-11-04, reporte: el agente no la veía — solo se mostraba
+          para el rechazo de una venta). Solo lo de esta temporada. */}
+      {cliente?.estado === 'rechazado_backoffice_renovacion' && clienteId && (
+        <SoportePolizaCard
+          clienteId={clienteId}
+          editable={false}
+          tipo="rechazo"
+          titulo="Soporte del rechazo"
+          desde={cliente.renovacion_iniciada_at}
+        />
+      )}
+
       {esRenov && clienteId && <HistorialCambiosCard clienteId={clienteId} contexto="renovacion" titulo="Qué se ha cambiado en esta renovación" />}
 
       {cliente?.estado === 'rechazado_backoffice' && (
