@@ -81,7 +81,7 @@ export default function GestionClientePage() {
   // volver a marcarlo si ya está ahí).
   const puedeMarcarTripartita =
     cliente.estado === 'pendiente_backoffice' || cliente.estado === 'pendiente_backoffice_renovacion'
-  const etiquetaIntermedio = renov ? 'Pendiente autorización renovación' : 'Pendiente llamada tripartita'
+  const etiquetaIntermedio = renov ? 'Pendiente autorización renovación' : 'Pendiente autorización cliente'
   // Mismos campos del plan que llena el agente — mismo trato de
   // MAYÚSCULAS (ver lib/mayusculas.ts). El motivo de rechazo y las
   // observaciones usan su propio estado y quedan como se escriben.
@@ -231,7 +231,7 @@ export default function GestionClientePage() {
                   value={motivoTripartita}
                   onChange={(e) => setMotivoTripartita(e.target.value)}
                   rows={3}
-                  placeholder={renov ? 'Qué autorización falta...' : 'Qué falta coordinar en la llamada...'}
+                  placeholder={renov ? 'Qué autorización falta...' : 'Qué falta para la autorización del cliente...'}
                 />
                 <div className="flex gap-2">
                   <Button size="sm" disabled={marcarTripartita.isPending} onClick={onMarcarTripartita}>

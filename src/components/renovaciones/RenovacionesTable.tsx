@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { toast } from 'sonner'
+import { Download, FileSpreadsheet, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -10,8 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useRenovaciones } from '@/hooks/renovaciones'
+import { useRenovaciones, descargarRenovacionesExcel } from '@/hooks/renovaciones'
 import { useAuthStore } from '@/stores/auth'
+import { apiErrorMessage } from '@/lib/api'
 import { ESTADO_CLIENTE_LABEL, ESTADO_CLIENTE_COLOR, RESULTADO_RENOVACION } from '@/lib/clienteConstants'
 import { fmtDateTime, onChangeFechaFiltro } from '@/lib/dateFormat'
 
@@ -60,19 +62,45 @@ export function RenovacionesTable({
   const estadosEfectivos = filtroResultado
     ? (RESULTADO_RENOVACION.find((r) => r.value === resultado)?.estados ?? estados)
     : estados
-  const { data, isLoading } = useRenovaciones({
+  const filtros = {
     estados: estadosEfectivos,
     q: q || undefined,
     desde: desde || undefined,
     hasta: hasta || undefined,
-  })
+  }
+  const { data, isLoading } = useRenovaciones(filtros)
+  const [descargando, setDescargando] = useState(false)
   const hayFiltros = !!q || !!desde || !!hasta || resultado !== 'todas'
   // El agente solo ve lo suyo, así que la columna "Agente" no le dice nada.
   const mostrarAgente = role !== 'agente'
+  // Mismos roles que exportan en Postventa — el agente no.
+  const puedeExportar = role === 'admin' || role === 'supervisor' || role === 'backoffice'
+
+  async function exportar() {
+    setDescargando(true)
+    try {
+      await descargarRenovacionesExcel(filtros)
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo exportar'))
+    } finally {
+      setDescargando(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader title={title} description={description} />
+      <PageHeader
+        title={title}
+        description={description}
+        actions={
+          puedeExportar ? (
+            <Button variant="outline" onClick={exportar} disabled={descargando}>
+              {descargando ? <FileSpreadsheet className="size-4 animate-pulse" /> : <Download className="size-4" />}
+              {descargando ? 'Generando...' : 'Exportar Excel'}
+            </Button>
+          ) : undefined
+        }
+      />
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="relative">

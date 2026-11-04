@@ -7,7 +7,7 @@ import type { NavItem } from './Sidebar'
 // nav horizontal ya no entraba sin scroll.
 const items: NavItem[] = [
   { to: '/', label: 'Cola de pendientes', icon: ListChecks, end: true, group: 'Ventas' },
-  { to: '/pendiente-tripartita', label: 'Pendiente llamada tripartita', icon: PhoneCall, group: 'Ventas' },
+  { to: '/pendiente-tripartita', label: 'Pendiente autorización cliente', icon: PhoneCall, group: 'Ventas' },
   { to: '/completados', label: 'Completados', icon: CheckCircle2, group: 'Ventas' },
   { to: '/rechazados', label: 'Rechazados', icon: Undo2, group: 'Ventas' },
   { to: '/postventa', label: 'Postventa', icon: Headphones, end: true, group: 'Postventa' },

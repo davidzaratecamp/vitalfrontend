@@ -34,6 +34,30 @@ export const useRenovaciones = (filters: RenovacionFilters = {}) =>
       ).data,
   })
 
+/** Excel de la vista actual de Renovaciones (2026-11-04, pedido del usuario)
+ * — manda los MISMOS filtros que la tabla, y el backend aplica la misma
+ * visibilidad por rol (ver streamRenovacionesExcel). */
+export async function descargarRenovacionesExcel(filters: RenovacionFilters = {}) {
+  const res = await api.get('/renovaciones/export.xlsx', {
+    params: {
+      estados: filters.estados?.length ? filters.estados.join(',') : undefined,
+      q: filters.q || undefined,
+      anio: filters.anio || undefined,
+      desde: filters.desde || undefined,
+      hasta: filters.hasta || undefined,
+    },
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(res.data as Blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `renovaciones_vital_${filters.desde ?? ''}_${filters.hasta ?? ''}.xlsx`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const useTemporadaRenovacion = () =>
   useQuery({
     queryKey: ['renovaciones', 'temporada'],

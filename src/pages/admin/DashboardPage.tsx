@@ -200,7 +200,7 @@ export default function DashboardPage() {
     { key: 'borrador', label: ESTADO_CLIENTE_LABEL.borrador, value: data.por_estado.borrador },
     {
       key: 'pendiente',
-      label: 'Pendiente (BackOffice + tripartita)',
+      label: 'Pendiente (BackOffice + autorización cliente)',
       value: data.por_estado.pendiente_backoffice + data.por_estado.pendiente_llamada_tripartita,
     },
     { key: 'aprobado', label: ESTADO_CLIENTE_LABEL.aprobado, value: data.por_estado.aprobado },
