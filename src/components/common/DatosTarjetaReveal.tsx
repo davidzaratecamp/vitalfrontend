@@ -4,7 +4,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useDataPointCompleto, useNumeroTarjetaCompleto } from '@/hooks/clientes'
 import { apiErrorMessage } from '@/lib/api'
-import { EMPRESA_VITAL_ASISTE_ID } from '@/lib/clienteConstants'
 import { useAuthStore } from '@/stores/auth'
 import type { NumeroTarjetaCompleto } from '@/lib/types'
 
@@ -32,20 +31,17 @@ const OCULTAR_TRAS_MS = 20_000
  * la tarjeta siguen sin poder verse" — Camila estaba viendo el cliente vía
  * un caso de postventa).
  */
-export function usePuedeVerDataPoint() {
+// 2026-11-06, pedido del usuario: todo BackOffice ve los datos de pago
+// completos, de cualquier empresa — reemplaza lo de arriba. Mismo criterio
+// que el backend.
+function usePuedeVerDatosPago() {
   const role = useAuthStore((s) => s.user?.role)
   const puedeVerDatosPago = useAuthStore((s) => s.user?.puede_ver_datos_pago)
-  return role === 'admin' || !!puedeVerDatosPago
+  return role === 'admin' || role === 'backoffice' || !!puedeVerDatosPago
 }
 
-export function usePuedeVerNumeroTarjeta() {
-  const role = useAuthStore((s) => s.user?.role)
-  const empresaId = useAuthStore((s) => s.user?.empresa_id)
-  const puedeVerDatosPago = useAuthStore((s) => s.user?.puede_ver_datos_pago)
-  if (role === 'admin') return true
-  if (empresaId === EMPRESA_VITAL_ASISTE_ID) return !!puedeVerDatosPago
-  return true
-}
+export const usePuedeVerDataPoint = usePuedeVerDatosPago
+export const usePuedeVerNumeroTarjeta = usePuedeVerDatosPago
 
 export function NumeroTarjetaReveal({ clienteId }: { clienteId: number }) {
   const puedeVer = usePuedeVerNumeroTarjeta()
